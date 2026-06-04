@@ -1,0 +1,7 @@
+{
+  "name": "simples-editor-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'Build placeholder - aguardando implementação TanStack Start' && mkdir -p dist && echo '<h1>Simples Editor</h1>' > dist/index.html"
+  }
+}
