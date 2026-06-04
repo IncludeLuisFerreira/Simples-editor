@@ -141,3 +141,15 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+
+# Docker
+nginx/ssl/*.pem
+nginx/ssl/*.crt
+nginx/ssl/*.key
