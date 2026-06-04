@@ -1,0 +1,8 @@
+flask==3.0.*
+flask-sock==0.7.*
+gevent==24.*
+docker==7.*
+PyJWT==2.*
+cryptography==42.*
+structlog==24.*
+prometheus-client==0.20.*
