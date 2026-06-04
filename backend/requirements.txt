@@ -7,4 +7,5 @@ cryptography==42.*
 structlog==24.*
 prometheus-client==0.20.*
 gunicorn==21.*
+supabase==2.*
 
