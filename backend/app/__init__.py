@@ -29,7 +29,8 @@ def create_app():
     sock = Sock(app)
     
     # Registrar blueprints
-    from app.routes import health
+    from app.routes import health, auth
     app.register_blueprint(health.bp)
+    app.register_blueprint(auth.bp)
     
     return app

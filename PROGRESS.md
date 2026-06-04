@@ -1,12 +1,12 @@
 # 📊 Simples Editor — Progresso de Implementação
-**Última atualização:** 2026-06-03 23:40
-**Progresso geral:** 8/46 issues (17%)
+**Última atualização:** 2026-06-04 00:09
+**Progresso geral:** 10/46 issues (21%)
 ---
 
-## Sprint 1 — Fundação e Autenticação (1/7)
+## Sprint 1 — Fundação e Autenticação (3/7)
 - [x] #8 feat(devops): setup Docker Compose structure
-- [ ] #9 feat(frontend): setup TanStack Start skeleton
-- [ ] #10 feat(backend): setup Flask app with health check
+- [x] #9 feat(frontend): setup TanStack Start skeleton
+- [x] #10 feat(backend): setup Flask app with health check
 - [ ] #11 feat(auth): integrate Supabase authentication
 - [ ] #12 feat(devops): configure Nginx reverse proxy
 - [ ] #13 feat(devops): setup CI/CD pipeline
