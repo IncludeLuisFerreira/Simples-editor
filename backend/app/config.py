@@ -2,7 +2,10 @@ import os
 
 class Config:
     """Configuração base da aplicação"""
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    if not SECRET_KEY:
+        raise ValueError("SECRET_KEY environment variable must be set")
+    
     FLASK_ENV = os.getenv('FLASK_ENV', 'production')
     
     # Supabase
