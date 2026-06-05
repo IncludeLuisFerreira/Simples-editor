@@ -1,19 +1,49 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useState } from 'react'
+import { CodeEditor } from '../components/CodeEditor'
+import { AuthGuard } from '../components/AuthGuard'
 
 export const Route = createFileRoute('/')({
-  component: Index,
+  component: () => (
+    <AuthGuard>
+      <Index />
+    </AuthGuard>
+  ),
 })
 
+const DEFAULT_CODE = `programa exemplo
+  inteiro x
+inicio
+  escreva "Digite um numero: "
+  leia x
+  escreval "Voce digitou: ", x
+fim`
+
 function Index() {
+  const [code, setCode] = useState(DEFAULT_CODE)
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-      <h2 className="text-2xl font-semibold text-gray-300">
-        Bem-vindo ao editor online da linguagem SIMPLES
-      </h2>
-      <p className="text-gray-400 max-w-2xl text-center">
-        Compile e execute código SIMPLES diretamente no navegador com suporte completo
-        a entrada/saída interativa e visualização do assembly gerado.
-      </p>
+    <div data-testid="index-container" className="flex flex-col h-full space-y-4 p-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-200">
+          Editor SIMPLES
+        </h2>
+        <div className="space-x-2">
+          <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors">
+            Run
+          </button>
+          <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition-colors">
+            Stop
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-[500px]">
+        <CodeEditor
+          code={code}
+          onChange={(val) => setCode(val ?? '')}
+        />
+      </div>
     </div>
   )
 }
