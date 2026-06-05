@@ -9,3 +9,6 @@ prometheus-client==0.20.*
 gunicorn==21.*
 supabase==2.*
 
+# Dev / CI
+ruff==0.11.*
+

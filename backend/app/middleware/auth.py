@@ -1,9 +1,11 @@
-from functools import wraps
-from flask import request, jsonify, g
-from supabase import create_client, Client
 import os
+from functools import wraps
+
+from flask import g, jsonify, request
+from supabase import Client, create_client
 
 _supabase: Client | None = None
+
 
 def get_supabase() -> Client:
     global _supabase
@@ -14,6 +16,7 @@ def get_supabase() -> Client:
         key = os.getenv('SUPABASE_ANON_KEY')
         _supabase = create_client(url, key)
     return _supabase
+
 
 def require_auth(f):
     @wraps(f)
@@ -30,4 +33,5 @@ def require_auth(f):
             return jsonify({'error': 'Invalid token'}), 401
 
         return f(*args, **kwargs)
+
     return decorated

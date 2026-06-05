@@ -11,8 +11,8 @@ function Index() {
         Bem-vindo ao editor online da linguagem SIMPLES
       </h2>
       <p className="text-gray-400 max-w-2xl text-center">
-        Compile e execute código SIMPLES diretamente no navegador com suporte completo
-        a entrada/saída interativa e visualização do assembly gerado.
+        Compile e execute código SIMPLES diretamente no navegador com suporte completo a
+        entrada/saída interativa e visualização do assembly gerado.
       </p>
     </div>
   )
