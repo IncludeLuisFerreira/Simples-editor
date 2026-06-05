@@ -90,3 +90,6 @@ git merge dev
 git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin main --tags
 ```
+## Observações
+
+Quero que a cada PR feito, no final esteja um close #issue-N para que a issue implementada feche automaticamente após merge.
