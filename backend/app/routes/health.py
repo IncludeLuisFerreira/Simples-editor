@@ -7,6 +7,7 @@ from flask import Blueprint, jsonify
 bp = Blueprint('health', __name__)
 logger = structlog.get_logger()
 
+
 @bp.route('/api/health', methods=['GET'])
 def health():
     """Health check endpoint - público, sem autenticação"""
@@ -31,6 +32,7 @@ def health():
     # Check docker
     try:
         import docker
+
         client = docker.from_env()
         client.ping()
         components['docker'] = {'status': 'ok'}
@@ -42,11 +44,7 @@ def health():
     supabase_url = os.getenv('SUPABASE_URL')
     components['supabase'] = {'status': 'ok' if supabase_url else 'not_configured'}
 
-    response = {
-        'status': 'ok',
-        'version': '1.0.0',
-        'components': components
-    }
+    response = {'status': 'ok', 'version': '1.0.0', 'components': components}
 
     logger.info('health_check', components=components)
 

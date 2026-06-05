@@ -7,6 +7,7 @@ bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
 _supabase: Client | None = None
 
+
 def get_supabase() -> Client:
     global _supabase
     if _supabase is None:
@@ -16,6 +17,7 @@ def get_supabase() -> Client:
         key = os.getenv('SUPABASE_ANON_KEY')
         _supabase = create_client(url, key)
     return _supabase
+
 
 @bp.route('/verify', methods=['POST'])
 def verify():
@@ -27,12 +29,14 @@ def verify():
 
     try:
         user_response = get_supabase().auth.get_user(token)
-        return jsonify({
-            'valid': True,
-            'user': {
-                'id': user_response.user.id,
-                'email': user_response.user.email,
-            },
-        }), 200
+        return jsonify(
+            {
+                'valid': True,
+                'user': {
+                    'id': user_response.user.id,
+                    'email': user_response.user.email,
+                },
+            }
+        ), 200
     except Exception as e:
         return jsonify({'valid': False, 'error': str(e)}), 401

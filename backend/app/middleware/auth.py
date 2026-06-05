@@ -6,6 +6,7 @@ from supabase import Client, create_client
 
 _supabase: Client | None = None
 
+
 def get_supabase() -> Client:
     global _supabase
     if _supabase is None:
@@ -15,6 +16,7 @@ def get_supabase() -> Client:
         key = os.getenv('SUPABASE_ANON_KEY')
         _supabase = create_client(url, key)
     return _supabase
+
 
 def require_auth(f):
     @wraps(f)
@@ -31,4 +33,5 @@ def require_auth(f):
             return jsonify({'error': 'Invalid token'}), 401
 
         return f(*args, **kwargs)
+
     return decorated
