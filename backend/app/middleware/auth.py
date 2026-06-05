@@ -1,7 +1,8 @@
-from functools import wraps
-from flask import request, jsonify, g
-from supabase import create_client, Client
 import os
+from functools import wraps
+
+from flask import g, jsonify, request
+from supabase import Client, create_client
 
 _supabase: Client | None = None
 

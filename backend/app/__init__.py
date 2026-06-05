@@ -1,12 +1,13 @@
+import structlog
 from flask import Flask
 from flask_sock import Sock
-import structlog
+
 
 def create_app():
     """Application factory"""
     app = Flask(__name__)
     app.config.from_object('app.config.Config')
-    
+
     # Configurar structlog
     structlog.configure(
         processors=[
@@ -24,13 +25,13 @@ def create_app():
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
-    
+
     # Inicializar flask-sock
-    sock = Sock(app)
-    
+    _sock = Sock(app)
+
     # Registrar blueprints
-    from app.routes import health, auth
+    from app.routes import auth, health
     app.register_blueprint(health.bp)
     app.register_blueprint(auth.bp)
-    
+
     return app

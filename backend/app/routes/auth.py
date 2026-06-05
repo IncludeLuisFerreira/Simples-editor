@@ -1,6 +1,7 @@
-from flask import Blueprint, request, jsonify
-from supabase import create_client, Client
 import os
+
+from flask import Blueprint, jsonify, request
+from supabase import Client, create_client
 
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
