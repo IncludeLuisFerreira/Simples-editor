@@ -8,10 +8,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Compilar simplesc
-RUN git clone https://github.com/includeluisferreira/simples-compiler.git /tmp/simplesc && \
+RUN git clone https://github.com/IncludeLuisFerreira/simples-compiler.git /tmp/simplesc && \
     cd /tmp/simplesc && \
     make && \
-    cp simplesc /usr/local/bin/ && \
+    cp build/simplesc /usr/local/bin/ && \
     rm -rf /tmp/simplesc
 
 FROM python:3.11-slim
