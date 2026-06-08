@@ -28,6 +28,7 @@ function Login() {
           appearance={{ theme: ThemeSupa }}
           theme="dark"
           providers={[]}
+          redirectTo={window.location.origin}
         />
       </div>
     </div>

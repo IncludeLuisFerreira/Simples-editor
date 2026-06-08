@@ -26,7 +26,7 @@ function Root() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <header className="border-b border-gray-700">
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
           <h1 className="text-2xl font-bold">Simples Editor</h1>
@@ -40,7 +40,7 @@ function Root() {
           )}
         </div>
       </header>
-      <main className="container mx-auto p-4">
+      <main className="flex-1 flex flex-col min-h-0">
         <Outlet />
       </main>
     </div>

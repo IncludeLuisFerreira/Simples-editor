@@ -65,6 +65,10 @@ export function SimplesEditor({ value, onChange, readOnly = false }: SimplesEdit
         padding: { top: 12 },
         automaticLayout: true,
         readOnly,
+        autoIndent: 'full',
+        autoClosingBrackets: 'always',
+        matchBrackets: 'always',
+        tabSize: 2,
       }}
     />
   )
