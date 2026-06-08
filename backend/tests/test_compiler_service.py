@@ -5,7 +5,6 @@ from app.services.compiler import CompilerService
 
 
 class TestCompilerService:
-
     @patch('app.services.compiler.shutil.rmtree')
     @patch('app.services.compiler.Path')
     @patch('app.services.compiler.subprocess.run')

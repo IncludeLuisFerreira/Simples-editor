@@ -18,14 +18,15 @@ class CompileResult:
 
 
 class CompilerService:
-
     def __init__(self, compile_timeout: int | None = None, max_code_kb: int | None = None):
         self._compile_timeout = (
-            compile_timeout if compile_timeout is not None else int(os.getenv('COMPILE_TIMEOUT_S', '15'))
+            compile_timeout
+            if compile_timeout is not None
+            else int(os.getenv('COMPILE_TIMEOUT_S', '15'))
         )
         self._max_code_bytes = (
-            (max_code_kb if max_code_kb is not None else int(os.getenv('MAX_CODE_KB', '64'))) * 1024
-        )
+            max_code_kb if max_code_kb is not None else int(os.getenv('MAX_CODE_KB', '64'))
+        ) * 1024
 
     def compile(self, code: str) -> CompileResult:
         try:
