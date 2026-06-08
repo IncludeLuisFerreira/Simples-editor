@@ -1,6 +1,6 @@
 # 📊 Simples Editor — Progresso de Implementação
 **Última atualização:** 2026-06-08 14:15
-**Progresso geral:** 15/46 issues (33%)
+**Progresso geral:** 16/46 issues (35%)
 ---
 
 ## Sprint 1 — Fundação e Autenticação (7/7)
@@ -12,10 +12,10 @@
 - [x] #13 feat(devops): setup CI/CD pipeline
 - [x] #14 docs(readme): create initial documentation
 
-## Sprint 2 — Editor e Compilador (1/6)
+## Sprint 2 — Editor e Compilador (2/6)
 - [ ] #15 feat(editor): add Monaco SIMPLES tokenizer
 - [x] #16 feat(editor): integrate Monaco component
-- [ ] #17 feat(backend): compile endpoint with simplesc
+- [x] #17 feat(backend): compile endpoint with simplesc
 - [ ] #18 feat(backend): add nasm and ld toolchain
 - [ ] #19 feat(frontend): add NASM viewer panel
 - [ ] #20 feat(editor): highlight compile errors with markers
