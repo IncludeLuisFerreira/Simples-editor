@@ -18,6 +18,8 @@ class Config:
     # Timeouts
     EXEC_TIMEOUT_S = int(os.getenv('EXEC_TIMEOUT_S', '10'))
     COMPILE_TIMEOUT_S = int(os.getenv('COMPILE_TIMEOUT_S', '15'))
+    ASSEMBLE_TIMEOUT_S = int(os.getenv('ASSEMBLE_TIMEOUT_S', '10'))
+    LINK_TIMEOUT_S = int(os.getenv('LINK_TIMEOUT_S', '10'))
 
     # Limits
     MAX_CODE_KB = int(os.getenv('MAX_CODE_KB', '64'))
