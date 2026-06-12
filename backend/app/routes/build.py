@@ -24,7 +24,9 @@ def handle_build():
 
     if result.success:
         logger.info('build_success', code_size=len(code), binary_size=result.binary_size)
-        return jsonify({'asm': result.asm, 'binary': result.binary, 'binary_size': result.binary_size}), 200
+        return jsonify(
+            {'asm': result.asm, 'binary': result.binary, 'binary_size': result.binary_size}
+        ), 200
 
     if result.phase == 'validation':
         logger.warning('build_validation_error', error=result.error, code_size=len(code))
