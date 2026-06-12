@@ -173,7 +173,7 @@ class TestCompilerServiceBuild:
         result = service.build('test code')
 
         assert not result.success
-        assert result.phase == 'compiler'
+        assert result.phase == 'semantic'
         assert result.line == 5
         assert result.column == 12
         assert result.error == 'variable not declared'

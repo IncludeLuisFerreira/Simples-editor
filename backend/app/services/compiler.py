@@ -190,7 +190,7 @@ class CompilerService:
                         error=match.group('message'),
                         line=int(match.group('line')),
                         column=int(match.group('column')),
-                        phase='compiler',
+                        phase=match.group('phase'),
                     )
                 return BuildResult(
                     success=False,

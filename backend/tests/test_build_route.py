@@ -84,7 +84,7 @@ class TestBuildRoute:
                 error='variavel nao declarada',
                 line=5,
                 column=12,
-                phase='compiler',
+                phase='semantic',
             )
 
             resp = client.post(
@@ -97,7 +97,7 @@ class TestBuildRoute:
             assert data['error'] == 'variavel nao declarada'
             assert data['line'] == 5
             assert data['column'] == 12
-            assert data['phase'] == 'compiler'
+            assert data['phase'] == 'semantic'
 
     def test_build_nasm_error(self, app, client, mock_auth):
         with patch('app.routes.build.CompilerService.build') as mock_build:
