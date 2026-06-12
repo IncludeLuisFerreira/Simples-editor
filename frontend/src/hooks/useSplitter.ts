@@ -11,7 +11,7 @@ interface UseSplitterReturn {
   collapsed: boolean
   onMouseDown: (e: React.MouseEvent) => void
   onDoubleClick: () => void
-  containerRef: React.RefObject<HTMLDivElement | null>
+  containerRef: React.RefObject<HTMLDivElement>
 }
 
 interface StoredState {
@@ -51,7 +51,7 @@ export function useSplitter(options: UseSplitterOptions = {}): UseSplitterReturn
   const stored = loadState(storageKey)
   const [ratio, setRatio] = useState(stored?.ratio ?? initialRatio)
   const [collapsed, setCollapsed] = useState(stored?.collapsed ?? false)
-  const containerRef = useRef<HTMLDivElement | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null!)
   const dragging = useRef(false)
   const lastRatio = useRef(ratio)
 
