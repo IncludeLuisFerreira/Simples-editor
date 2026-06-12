@@ -11,8 +11,7 @@ export const Route = createFileRoute('/')({
 function Index() {
   const [code, setCode] = useState('')
   const [asm] = useState('')
-  const { ratio, collapsed, onMouseDown, onDoubleClick, containerRef } =
-    useSplitter()
+  const { ratio, collapsed, onMouseDown, onDoubleClick, containerRef } = useSplitter()
 
   return (
     <div ref={containerRef} className="flex flex-1 min-h-0">
