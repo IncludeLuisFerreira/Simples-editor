@@ -55,7 +55,7 @@ export function registerAsmLang(monaco: typeof import('monaco-editor')) {
     keywords: [...ASM_KEYWORDS, ...ASM_INSTRUCTIONS],
     registers: ASM_REGISTERS,
     directives: ASM_DIRECTIVES,
-    symbols: /[=<>+\-*\/\[\],:]+/,
+    symbols: /[=<>+\-*/[\],:]+/,
     tokenizer: {
       root: [
         [/[a-zA-Z_][\w.]*:/, 'label'],
