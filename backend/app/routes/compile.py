@@ -6,7 +6,6 @@ from app.services.compiler import CompilerService
 bp = Blueprint('compile', __name__, url_prefix='/api')
 logger = structlog.get_logger()
 compiler = CompilerService()
-SIMPLESC_PHASES = {'lexer', 'parser', 'semantic'}
 
 
 @bp.route('/compile', methods=['POST'])
