@@ -1,0 +1,52 @@
+import Editor from '@monaco-editor/react'
+
+interface NasmPanelProps {
+  state: 'idle' | 'compiling' | 'success' | 'infra-error'
+  asm?: string
+  errorLog?: string
+}
+
+export function NasmPanel({ state, asm, errorLog }: NasmPanelProps) {
+  if (state === 'idle') {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500 text-sm px-4 text-center">
+        Compile seu código para ver o assembly gerado
+      </div>
+    )
+  }
+
+  if (state === 'compiling') {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-400 text-sm gap-2">
+        <div className="animate-spin h-4 w-4 border-2 border-cyan-400 border-t-transparent rounded-full" />
+        Compilando...
+      </div>
+    )
+  }
+
+  if (state === 'infra-error') {
+    return (
+      <pre className="h-full overflow-auto p-4 text-red-400 text-xs font-mono bg-[#1a1a2e] whitespace-pre-wrap break-words">
+        {errorLog ?? 'Erro desconhecido no toolchain'}
+      </pre>
+    )
+  }
+
+  return (
+    <Editor
+      height="100%"
+      language="plaintext"
+      theme="simples-dark"
+      value={asm ?? ''}
+      options={{
+        readOnly: true,
+        minimap: { enabled: false },
+        fontSize: 13,
+        padding: { top: 12 },
+        automaticLayout: true,
+        scrollBeyondLastLine: false,
+        wordWrap: 'off',
+      }}
+    />
+  )
+}
