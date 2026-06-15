@@ -219,3 +219,24 @@ class TestCompilerServiceFull:
         assert 'undefined reference' in result.error
         assert result.line is None
         assert mock_run.call_count == 3
+
+    def test_compile_full_code_too_large(self):
+        service = CompilerService(compile_timeout=30, max_code_kb=1)
+        # Generate 1025 bytes (1 KB + 1 byte) of code
+        big_code = 'x' * 1025
+        result = service.compile_full(big_code)
+
+        assert not result.success
+        assert result.phase == 'validation'
+        assert 'exceeds maximum size' in result.error
+
+    def test_compile_full_invalid_utf8(self):
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        # Python str cannot contain surrogates, so we need to trick encode()
+        # Use a string with a surrogate character that fails encode('utf-8')
+        bad_code = '\ud800'  # lone surrogate, fails UTF-8 encode
+        result = service.compile_full(bad_code)
+
+        assert not result.success
+        assert result.phase == 'validation'
+        assert result.error == 'Invalid UTF-8 in source code'
