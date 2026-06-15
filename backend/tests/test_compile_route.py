@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import json
 
 import pytest
 
@@ -58,7 +59,7 @@ class TestCompileRoute:
         assert resp.get_json()['error'] == 'Field code must be a string'
 
     def test_compile_success(self, app, client, mock_auth):
-        with patch('app.routes.compile.CompilerService.compile') as mock_compile:
+        with patch('app.routes.compile.CompilerService.compile_full') as mock_compile:
             mock_compile.return_value = CompileResult(success=True, asm='section .text')
 
             resp = client.post(
@@ -70,7 +71,7 @@ class TestCompileRoute:
             assert resp.get_json()['asm'] == 'section .text'
 
     def test_compile_error_response(self, app, client, mock_auth):
-        with patch('app.routes.compile.CompilerService.compile') as mock_compile:
+        with patch('app.routes.compile.CompilerService.compile_full') as mock_compile:
             mock_compile.return_value = CompileResult(
                 success=False,
                 error='variavel nao declarada',
@@ -92,7 +93,7 @@ class TestCompileRoute:
             assert data['phase'] == 'semantic'
 
     def test_compile_validation_size_error(self, app, client, mock_auth):
-        with patch('app.routes.compile.CompilerService.compile') as mock_compile:
+        with patch('app.routes.compile.CompilerService.compile_full') as mock_compile:
             mock_compile.return_value = CompileResult(
                 success=False,
                 error='Code exceeds maximum size of 64 KB',
@@ -108,7 +109,7 @@ class TestCompileRoute:
             assert resp.get_json()['error'] == 'Code exceeds maximum size of 64 KB'
 
     def test_compile_validation_utf8_error(self, app, client, mock_auth):
-        with patch('app.routes.compile.CompilerService.compile') as mock_compile:
+        with patch('app.routes.compile.CompilerService.compile_full') as mock_compile:
             mock_compile.return_value = CompileResult(
                 success=False,
                 error='Invalid UTF-8 in source code',
@@ -124,7 +125,7 @@ class TestCompileRoute:
             assert resp.get_json()['error'] == 'Invalid UTF-8 in source code'
 
     def test_compile_timeout(self, app, client, mock_auth):
-        with patch('app.routes.compile.CompilerService.compile') as mock_compile:
+        with patch('app.routes.compile.CompilerService.compile_full') as mock_compile:
             mock_compile.return_value = CompileResult(
                 success=False,
                 error='Compilation timed out',
@@ -138,3 +139,45 @@ class TestCompileRoute:
             )
             assert resp.status_code == 408
             assert resp.get_json()['error'] == 'Compilation timed out'
+
+    def test_compile_full_nasm_error_no_line_column(self, client, mock_auth):
+        """nasm/ld errors must NOT include line or column in response"""
+        with patch('app.routes.compile.CompilerService.compile_full') as mock_compile:
+            mock_compile.return_value = CompileResult(
+                success=False,
+                error='output.asm:5: error: invalid combination of opcode and operands',
+                phase='nasm',
+            )
+            response = client.post(
+                '/api/compile',
+                data=json.dumps({'code': 'programa x\ninicio\nfim\n'}),
+                content_type='application/json',
+                headers={'Authorization': 'Bearer valid-token'},
+            )
+        assert response.status_code == 400
+        data = json.loads(response.data)
+        assert data['phase'] == 'nasm'
+        assert 'invalid combination' in data['error']
+        assert 'line' not in data
+        assert 'column' not in data
+
+    def test_compile_full_ld_error_no_line_column(self, client, mock_auth):
+        """ld errors must NOT include line or column in response"""
+        with patch('app.routes.compile.CompilerService.compile_full') as mock_compile:
+            mock_compile.return_value = CompileResult(
+                success=False,
+                error="output.o: undefined reference to `_start'",
+                phase='ld',
+            )
+            response = client.post(
+                '/api/compile',
+                data=json.dumps({'code': 'programa x\ninicio\nfim\n'}),
+                content_type='application/json',
+                headers={'Authorization': 'Bearer valid-token'},
+            )
+        assert response.status_code == 400
+        data = json.loads(response.data)
+        assert data['phase'] == 'ld'
+        assert 'undefined reference' in data['error']
+        assert 'line' not in data
+        assert 'column' not in data
