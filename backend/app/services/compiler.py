@@ -1,4 +1,3 @@
-import base64
 import os
 import re
 import shutil
@@ -18,26 +17,8 @@ class CompileResult:
     phase: str | None = None
 
 
-@dataclass
-class BuildResult:
-    success: bool
-    asm: str | None = None
-    binary: str | None = None
-    binary_size: int | None = None
-    error: str | None = None
-    line: int | None = None
-    column: int | None = None
-    phase: str | None = None
-
-
 class CompilerService:
-    def __init__(
-        self,
-        compile_timeout: int | None = None,
-        max_code_kb: int | None = None,
-        assemble_timeout: int | None = None,
-        link_timeout: int | None = None,
-    ):
+    def __init__(self, compile_timeout: int | None = None, max_code_kb: int | None = None):
         self._compile_timeout = (
             compile_timeout
             if compile_timeout is not None
@@ -46,28 +27,21 @@ class CompilerService:
         self._max_code_bytes = (
             max_code_kb if max_code_kb is not None else int(os.getenv('MAX_CODE_KB', '64'))
         ) * 1024
-        self._assemble_timeout = (
-            assemble_timeout
-            if assemble_timeout is not None
-            else int(os.getenv('ASSEMBLE_TIMEOUT_S', '10'))
-        )
-        self._link_timeout = (
-            link_timeout if link_timeout is not None else int(os.getenv('LINK_TIMEOUT_S', '10'))
-        )
 
-    def _validate(self, code: str) -> str | None:
+    def compile(self, code: str) -> CompileResult:
         try:
             code_bytes = code.encode('utf-8')
         except UnicodeEncodeError:
-            return 'Invalid UTF-8 in source code'
-        if len(code_bytes) > self._max_code_bytes:
-            return f'Code exceeds maximum size of {self._max_code_bytes // 1024} KB'
-        return None
+            return CompileResult(
+                success=False, error='Invalid UTF-8 in source code', phase='validation'
+            )
 
-    def compile(self, code: str) -> CompileResult:
-        validation_error = self._validate(code)
-        if validation_error:
-            return CompileResult(success=False, error=validation_error, phase='validation')
+        if len(code_bytes) > self._max_code_bytes:
+            return CompileResult(
+                success=False,
+                error=f'Code exceeds maximum size of {self._max_code_bytes // 1024} KB',
+                phase='validation',
+            )
 
         tmpdir = None
         try:
@@ -115,48 +89,43 @@ class CompilerService:
             return CompileResult(success=False, error='Compilation timed out', phase='compiler')
         finally:
             if tmpdir is not None and tmpdir.exists():
-                shutil.rmtree(tmpdir, ignore_errors=True)
+                shutil.rmtree(tmpdir)
 
-    def _assemble(self, asm_path: Path, output_path: Path) -> str | None:
-        try:
-            result = subprocess.run(
-                ['nasm', '-f', 'elf32', str(asm_path), '-o', str(output_path)],
-                capture_output=True,
-                timeout=self._assemble_timeout,
+    def _parse_simplesc_stderr(self, stderr: bytes) -> CompileResult:
+        text = stderr.decode('utf-8', errors='replace')
+        match = re.search(
+            r'^(?P<phase>\w+):(?P<line>\d+):(?P<column>\d+): (?P<message>.*)$',
+            text,
+            re.MULTILINE,
+        )
+        if match:
+            return CompileResult(
+                success=False,
+                error=match.group('message'),
+                line=int(match.group('line')),
+                column=int(match.group('column')),
+                phase=match.group('phase'),
             )
-            if result.returncode != 0:
-                return (
-                    result.stderr.decode('utf-8', errors='replace').strip()
-                    or 'Assembly failed with unknown error'
-                )
-            if not output_path.exists():
-                return 'Object file not generated'
-            return None
-        except subprocess.TimeoutExpired:
-            return 'Assembly timed out'
+        return CompileResult(
+            success=False,
+            error=text.strip() or 'Unknown compilation error',
+            phase='compiler',
+        )
 
-    def _link(self, obj_path: Path, output_path: Path) -> str | None:
+    def compile_full(self, code: str) -> CompileResult:
         try:
-            result = subprocess.run(
-                ['i686-linux-gnu-ld', '-m', 'elf_i386', str(obj_path), '-o', str(output_path)],
-                capture_output=True,
-                timeout=self._link_timeout,
+            code_bytes = code.encode('utf-8')
+        except UnicodeEncodeError:
+            return CompileResult(
+                success=False, error='Invalid UTF-8 in source code', phase='validation'
             )
-            if result.returncode != 0:
-                return (
-                    result.stderr.decode('utf-8', errors='replace').strip()
-                    or 'Link failed with unknown error'
-                )
-            if not output_path.exists():
-                return 'Binary not generated'
-            return None
-        except subprocess.TimeoutExpired:
-            return 'Link timed out'
 
-    def build(self, code: str) -> BuildResult:
-        validation_error = self._validate(code)
-        if validation_error:
-            return BuildResult(success=False, error=validation_error, phase='validation')
+        if len(code_bytes) > self._max_code_bytes:
+            return CompileResult(
+                success=False,
+                error=f'Code exceeds maximum size of {self._max_code_bytes // 1024} KB',
+                phase='validation',
+            )
 
         tmpdir = None
         try:
@@ -166,63 +135,54 @@ class CompilerService:
             input_path = tmpdir / 'input.simples'
             asm_path = tmpdir / 'output.asm'
             obj_path = tmpdir / 'output.o'
-            elf_path = tmpdir / 'output.elf'
+            bin_path = tmpdir / 'programa'
 
             input_path.write_text(code, encoding='utf-8')
 
-            compile_result = subprocess.run(
+            sc = subprocess.run(
                 ['simplesc', str(input_path), '-o', str(asm_path)],
                 cwd=str(tmpdir),
                 capture_output=True,
                 timeout=self._compile_timeout,
             )
-
-            if compile_result.returncode != 0:
-                stderr = compile_result.stderr.decode('utf-8', errors='replace')
-                match = re.search(
-                    r'^(?P<phase>\w+):(?P<line>\d+):(?P<column>\d+): (?P<message>.*)$',
-                    stderr,
-                    re.MULTILINE,
-                )
-                if match:
-                    return BuildResult(
-                        success=False,
-                        error=match.group('message'),
-                        line=int(match.group('line')),
-                        column=int(match.group('column')),
-                        phase=match.group('phase'),
-                    )
-                return BuildResult(
-                    success=False,
-                    error=stderr.strip() or 'Unknown compilation error',
-                    phase='compiler',
-                )
-
+            if sc.returncode != 0:
+                return self._parse_simplesc_stderr(sc.stderr)
             if not asm_path.exists():
-                return BuildResult(
-                    success=False, error='Assembly output not generated', phase='compiler'
+                return CompileResult(
+                    success=False, error='Output file not generated', phase='compiler'
                 )
-
             asm_text = asm_path.read_text(encoding='utf-8')
 
-            nasm_error = self._assemble(asm_path, obj_path)
-            if nasm_error:
-                return BuildResult(success=False, error=nasm_error, phase='nasm')
-
-            ld_error = self._link(obj_path, elf_path)
-            if ld_error:
-                return BuildResult(success=False, error=ld_error, phase='ld')
-
-            elf_bytes = elf_path.read_bytes()
-            return BuildResult(
-                success=True,
-                asm=asm_text,
-                binary=base64.b64encode(elf_bytes).decode(),
-                binary_size=len(elf_bytes),
+            nasm = subprocess.run(
+                ['nasm', '-f', 'elf32', str(asm_path), '-o', str(obj_path)],
+                cwd=str(tmpdir),
+                capture_output=True,
+                timeout=self._compile_timeout,
             )
+            if nasm.returncode != 0:
+                return CompileResult(
+                    success=False,
+                    error=nasm.stderr.decode('utf-8', errors='replace').strip() or 'nasm failed',
+                    phase='nasm',
+                )
+
+            ld = subprocess.run(
+                ['i686-linux-gnu-ld', '-m', 'elf_i386', str(obj_path), '-o', str(bin_path)],
+                cwd=str(tmpdir),
+                capture_output=True,
+                timeout=self._compile_timeout,
+            )
+            if ld.returncode != 0:
+                return CompileResult(
+                    success=False,
+                    error=ld.stderr.decode('utf-8', errors='replace').strip() or 'ld failed',
+                    phase='ld',
+                )
+
+            return CompileResult(success=True, asm=asm_text)
 
         except subprocess.TimeoutExpired:
-            return BuildResult(success=False, error='Compilation timed out', phase='compiler')
+            return CompileResult(success=False, error='Compilation timed out', phase='compiler')
         finally:
             if tmpdir is not None and tmpdir.exists():
-                shutil.rmtree(tmpdir, ignore_errors=True)
+                shutil.rmtree(tmpdir)
