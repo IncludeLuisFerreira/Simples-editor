@@ -27,6 +27,8 @@ function Index() {
     setNasmState('compiling')
     setMarkers([])
     setInfraError(null)
+    setNasmAsm('')
+    setNasmErrorLog('')
     try {
       const resp = await fetch('/api/compile', {
         method: 'POST',
