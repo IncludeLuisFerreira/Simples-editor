@@ -18,6 +18,7 @@ export function SimplesEditor({ value, onChange, readOnly = false }: SimplesEdit
       symbols: /[=<>+\-*]+/,
       tokenizer: {
         root: [
+          [/\/\/.*$/, 'comment'],
           [/[a-zA-Z_]\w*/, { cases: { '@keywords': 'keyword', '@default': 'identifier' } }],
           [/\d+\.\d+/, 'number.float'],
           [/\d+/, 'number'],
