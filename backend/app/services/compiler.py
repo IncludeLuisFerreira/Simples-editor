@@ -11,6 +11,7 @@ from uuid import uuid4
 class CompileResult:
     success: bool
     asm: str | None = None
+    binary_key: str | None = None
     error: str | None = None
     line: int | None = None
     column: int | None = None
@@ -179,7 +180,7 @@ class CompilerService:
                     phase='ld',
                 )
 
-            return CompileResult(success=True, asm=asm_text)
+            return CompileResult(success=True, asm=asm_text, binary_key=tmpdir.name)
 
         except subprocess.TimeoutExpired:
             return CompileResult(success=False, error='Compilation timed out', phase='compiler')

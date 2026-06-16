@@ -20,7 +20,10 @@ def handle_compile():
     result = compiler.compile_full(code)
     if result.success:
         logger.info('compile_success', code_size=len(code))
-        return jsonify({'asm': result.asm}), 200
+        response = {'asm': result.asm}
+        if result.binary_key:
+            response['binary_key'] = result.binary_key
+        return jsonify(response), 200
     if result.phase == 'validation':
         logger.warning('compile_validation_error', error=result.error, code_size=len(code))
         status = 413 if 'exceeds maximum size' in result.error else 400
