@@ -1,6 +1,6 @@
 # 📊 Simples Editor — Progresso de Implementação
 **Última atualização:** 2026-06-16
-**Progresso geral:** 34/46 issues (74%)
+**Progresso geral:** 35/46 issues (76%)
 ---
 
 ## Sprint 1 — Fundação e Autenticação (7/7)
@@ -37,9 +37,9 @@
 - [x] #32 feat(backend): add structured logging
 - [x] #33 feat(backend): enhance health check endpoint
 
-## Sprint 5 — Observabilidade e Deploy (1/6)
+## Sprint 5 — Observabilidade e Deploy (2/6)
 - [x] #34 feat(backend): add Prometheus metrics
-- [ ] #35 feat(devops): create Terraform for OCI Ampere A1
+- [x] #35 feat(devops): create Terraform for OCI Ampere A1
 - [ ] #36 feat(devops): deploy to OCI with TLS
 - [ ] #37 feat(backend): validate qemu-user on ARM64
 - [ ] #38 docs(deploy): create production deployment playbook
