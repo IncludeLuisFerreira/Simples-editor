@@ -30,22 +30,21 @@ class PtyExecutionStrategy:
 
             client = docker.from_env()
             self.container = client.containers.run(
-                image=self.RUNNER_IMAGE,
-                command='./prog',
-                volumes={self.tmpdir: {'bind': '/sandbox', 'mode': 'ro'}},
-                working_dir='/sandbox',
-                remove=True,
-                read_only=True,
-                network_mode='none',
-                mem_limit='64m',
-                nano_cpus=500_000_000,
-                user='65534:65534',
-                pids_limit=32,
-                stop_timeout=2,
-                detach=True,
-                stdin_open=True,
-                stdout=True,
-                stderr=True,
+            image=self.RUNNER_IMAGE,
+            command='./prog',
+            volumes={self.tmpdir: {'bind': '/sandbox', 'mode': 'ro'}},
+            working_dir='/sandbox',
+            remove=True,
+            read_only=True,
+            network_mode='none',
+            mem_limit='64m',
+            nano_cpus=500_000_000,
+            user='65534:65534',
+            pids_limit=32,
+            detach=True,
+            stdin_open=True,
+            stdout=True,
+            stderr=True,
             )
 
             self._stdin_socket = self.container.attach_socket(
