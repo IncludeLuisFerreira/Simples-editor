@@ -48,9 +48,15 @@ class PtyExecutionStrategy:
                 stderr=True,
             )
 
-            self._stdin_socket = self.container.attach_socket(params={'stdin': 1, 'stream': 1})
-            socket = self.container.attach_socket(params={'stdin': 1, 'stdout': 1, 'stderr': 1, 'stream': 1})
-            logger.info('execution_container_started', image=self.RUNNER_IMAGE, key=binary_session_key)
+            self._stdin_socket = self.container.attach_socket(
+                params={'stdin': 1, 'stream': 1})
+            socket = self.container.attach_socket(
+                params={'stdin': 1, 'stdout': 1, 'stderr': 1, 'stream': 1})
+            logger.info(
+                'execution_container_started',
+                image=self.RUNNER_IMAGE,
+                key=binary_session_key,
+            )
             gevent.spawn(self._stream_output, ws, socket)
         except Exception:
             self.cleanup()

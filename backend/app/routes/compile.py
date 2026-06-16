@@ -1,5 +1,6 @@
 import structlog
 from flask import Blueprint, jsonify, request
+
 from app.middleware.auth import require_auth
 from app.services.compiler import CompilerService
 

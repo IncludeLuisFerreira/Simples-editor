@@ -1,8 +1,7 @@
 import json
 import os
-import subprocess
 import tempfile
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 from app.strategies.execution import PtyExecutionStrategy
 
@@ -13,7 +12,9 @@ class TestPtyExecutionStrategy:
     @patch('app.strategies.execution.os.chmod')
     @patch('app.strategies.execution.tempfile.mkdtemp')
     @patch('app.strategies.execution.docker.from_env')
-    def test_spawn_creates_tmpdir_and_container(self, mock_docker, mock_mkdtemp, mock_chmod, mock_copy, mock_rmtree):
+    def test_spawn_creates_tmpdir_and_container(
+        self, mock_docker, mock_mkdtemp, mock_chmod, mock_copy, mock_rmtree,
+    ):
         mock_mkdtemp.return_value = '/tmp/test-abc'
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
@@ -42,7 +43,15 @@ class TestPtyExecutionStrategy:
     @patch('app.strategies.execution.os.chmod')
     @patch('app.strategies.execution.tempfile.mkdtemp')
     @patch('app.strategies.execution.docker.from_env')
-    def test_spawn_streams_stdout_to_ws(self, mock_docker, mock_mkdtemp, mock_chmod, mock_copy, mock_rmtree, mock_spawn_later):
+    def test_spawn_streams_stdout_to_ws(
+        self,
+        mock_docker,
+        mock_mkdtemp,
+        mock_chmod,
+        mock_copy,
+        mock_rmtree,
+        mock_spawn_later,
+    ):
         mock_mkdtemp.return_value = '/tmp/test-abc'
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
@@ -73,7 +82,15 @@ class TestPtyExecutionStrategy:
     @patch('app.strategies.execution.os.chmod')
     @patch('app.strategies.execution.tempfile.mkdtemp')
     @patch('app.strategies.execution.docker.from_env')
-    def test_spawn_captures_exit_code(self, mock_docker, mock_mkdtemp, mock_chmod, mock_copy, mock_rmtree, mock_spawn_later):
+    def test_spawn_captures_exit_code(
+        self,
+        mock_docker,
+        mock_mkdtemp,
+        mock_chmod,
+        mock_copy,
+        mock_rmtree,
+        mock_spawn_later,
+    ):
         mock_mkdtemp.return_value = '/tmp/test-abc'
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
@@ -115,7 +132,9 @@ class TestPtyExecutionStrategy:
     @patch('app.strategies.execution.os.chmod')
     @patch('app.strategies.execution.tempfile.mkdtemp')
     @patch('app.strategies.execution.docker.from_env')
-    def test_terminate_sends_sigterm_then_sigkill(self, mock_docker, mock_mkdtemp, mock_chmod, mock_copy, mock_rmtree):
+    def test_terminate_sends_sigterm_then_sigkill(
+        self, mock_docker, mock_mkdtemp, mock_chmod, mock_copy, mock_rmtree,
+    ):
         mock_mkdtemp.return_value = '/tmp/test-abc'
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
@@ -158,7 +177,15 @@ class TestExecutionStrategyIntegration:
     @patch('app.strategies.execution.os.chmod')
     @patch('app.strategies.execution.tempfile.mkdtemp')
     @patch('app.strategies.execution.docker.from_env')
-    def test_spawn_full_lifecycle(self, mock_docker, mock_mkdtemp, mock_chmod, mock_copy, mock_rmtree, mock_spawn):
+    def test_spawn_full_lifecycle(
+        self,
+        mock_docker,
+        mock_mkdtemp,
+        mock_chmod,
+        mock_copy,
+        mock_rmtree,
+        mock_spawn,
+    ):
         mock_spawn.side_effect = lambda fn, ws, socket: fn(ws, socket)
         mock_mkdtemp.return_value = '/tmp/test-abc'
         mock_client = MagicMock()
