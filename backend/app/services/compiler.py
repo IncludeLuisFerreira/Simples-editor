@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
+from app.services.validation import validate_code
+
 
 @dataclass
 class CompileResult:
@@ -29,7 +31,7 @@ class CompilerService:
             max_code_kb if max_code_kb is not None else int(os.getenv('MAX_CODE_KB', '64'))
         ) * 1024
 
-    def compile(self, code: str) -> CompileResult:
+    def _validate(self, code: str) -> CompileResult | None:
         try:
             code_bytes = code.encode('utf-8')
         except UnicodeEncodeError:
@@ -43,6 +45,17 @@ class CompilerService:
                 error=f'Code exceeds maximum size of {self._max_code_bytes // 1024} KB',
                 phase='validation',
             )
+
+        validation_error = validate_code(code)
+        if validation_error:
+            return CompileResult(success=False, error=validation_error, phase='validation')
+
+        return None
+
+    def compile(self, code: str) -> CompileResult:
+        validation = self._validate(code)
+        if validation:
+            return validation
 
         tmpdir = None
         try:
@@ -114,19 +127,9 @@ class CompilerService:
         )
 
     def compile_full(self, code: str) -> CompileResult:
-        try:
-            code_bytes = code.encode('utf-8')
-        except UnicodeEncodeError:
-            return CompileResult(
-                success=False, error='Invalid UTF-8 in source code', phase='validation'
-            )
-
-        if len(code_bytes) > self._max_code_bytes:
-            return CompileResult(
-                success=False,
-                error=f'Code exceeds maximum size of {self._max_code_bytes // 1024} KB',
-                phase='validation',
-            )
+        validation = self._validate(code)
+        if validation:
+            return validation
 
         tmpdir = None
         try:

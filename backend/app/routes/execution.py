@@ -5,6 +5,7 @@ import structlog
 
 from app.middleware.auth import get_supabase
 from app.middleware.ratelimit import ws_rate_limiter
+from app.services.validation import validate_stdin
 from app.strategies.execution import PtyExecutionStrategy
 
 logger = structlog.get_logger()
@@ -52,7 +53,12 @@ def handle_execution_ws(ws):
                 if binary_key:
                     strategy.spawn(ws, binary_session_key=binary_key)
             elif msg_type == 'input':
-                strategy.write(data.get('data', ''))
+                stdin_data = data.get('data', '')
+                stdin_error = validate_stdin(stdin_data)
+                if stdin_error:
+                    ws.send(json.dumps({'type': 'error', 'data': stdin_error}))
+                    continue
+                strategy.write(stdin_data)
             elif msg_type == 'stop':
                 strategy.terminate(ws)
                 break
