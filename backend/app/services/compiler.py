@@ -130,7 +130,7 @@ class CompilerService:
 
         tmpdir = None
         try:
-            tmpdir = Path(f'/tmp/sim-{uuid4().hex}')
+            tmpdir = Path(f'/tmp/simples/{uuid4().hex}')
             tmpdir.mkdir(parents=True, exist_ok=True)
 
             input_path = tmpdir / 'input.simples'
@@ -147,8 +147,10 @@ class CompilerService:
                 timeout=self._compile_timeout,
             )
             if sc.returncode != 0:
+                shutil.rmtree(tmpdir)
                 return self._parse_simplesc_stderr(sc.stderr)
             if not asm_path.exists():
+                shutil.rmtree(tmpdir)
                 return CompileResult(
                     success=False, error='Output file not generated', phase='compiler'
                 )
@@ -161,6 +163,7 @@ class CompilerService:
                 timeout=self._compile_timeout,
             )
             if nasm.returncode != 0:
+                shutil.rmtree(tmpdir)
                 return CompileResult(
                     success=False,
                     error=nasm.stderr.decode('utf-8', errors='replace').strip() or 'nasm failed',
@@ -174,6 +177,7 @@ class CompilerService:
                 timeout=self._compile_timeout,
             )
             if ld.returncode != 0:
+                shutil.rmtree(tmpdir)
                 return CompileResult(
                     success=False,
                     error=ld.stderr.decode('utf-8', errors='replace').strip() or 'ld failed',
@@ -183,7 +187,6 @@ class CompilerService:
             return CompileResult(success=True, asm=asm_text, binary_key=tmpdir.name)
 
         except subprocess.TimeoutExpired:
-            return CompileResult(success=False, error='Compilation timed out', phase='compiler')
-        finally:
             if tmpdir is not None and tmpdir.exists():
                 shutil.rmtree(tmpdir)
+            return CompileResult(success=False, error='Compilation timed out', phase='compiler')

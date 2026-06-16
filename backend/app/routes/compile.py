@@ -28,10 +28,10 @@ def handle_compile():
     if result.phase == 'validation':
         logger.warning('compile_validation_error', error=result.error, code_size=len(code))
         status = 413 if 'exceeds maximum size' in result.error else 400
-        return jsonify({'error': result.error}), status
+        return jsonify({'error': result.error, 'phase': result.phase}), status
     if result.error == 'Compilation timed out':
         logger.warning('compile_timeout', code_size=len(code))
-        return jsonify({'error': result.error}), 408
+        return jsonify({'error': result.error, 'phase': result.phase or 'compiler'}), 408
     logger.warning('compile_error', phase=result.phase, line=result.line, error=result.error)
     response: dict = {'error': result.error, 'phase': result.phase}
     if result.line is not None:
