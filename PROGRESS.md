@@ -1,6 +1,6 @@
 # 📊 Simples Editor — Progresso de Implementação
 **Última atualização:** 2026-06-16
-**Progresso geral:** 28/46 issues (61%)
+**Progresso geral:** 29/46 issues (63%)
 ---
 
 ## Sprint 1 — Fundação e Autenticação (7/7)
@@ -29,9 +29,9 @@
 - [x] #26 feat(frontend): implement WebSocket client state machine
 - [x] #27 feat(frontend): add Run and Stop buttons
 
-## Sprint 4 — Segurança e Limites (1/6)
+## Sprint 4 — Segurança e Limites (2/6)
 - [x] #28 feat(security): harden sandbox container
-- [ ] #29 feat(backend): add rate limiting
+- [x] #29 feat(backend): add rate limiting
 - [ ] #30 feat(backend): add input validation
 - [ ] #31 feat(backend): implement three-layer timeouts
 - [ ] #32 feat(backend): add structured logging
