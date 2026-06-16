@@ -28,6 +28,7 @@ class Config:
     # Sandbox limits
     MEM_SANDBOX_LIMIT_MB = int(os.getenv('MEM_SANDBOX_LIMIT_MB', '128'))
     PIDS_SANDBOX_LIMIT = int(os.getenv('PIDS_SANDBOX_LIMIT', '64'))
+    DOCKER_STOP_TIMEOUT_S = int(os.getenv('DOCKER_STOP_TIMEOUT_S', '12'))
 
     # Runner
     RUNNER_IMAGE = os.getenv('RUNNER_IMAGE', 'simples-runner:latest')

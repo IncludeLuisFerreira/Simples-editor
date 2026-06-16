@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import time
 from uuid import uuid4
 
 import docker
@@ -16,14 +17,17 @@ class PtyExecutionStrategy:
     RUNNER_IMAGE = os.getenv('RUNNER_IMAGE', 'simples-runner:latest')
     MEM_LIMIT_MB = int(os.getenv('MEM_SANDBOX_LIMIT_MB', '128'))
     PIDS_LIMIT = int(os.getenv('PIDS_SANDBOX_LIMIT', '64'))
+    DOCKER_STOP_TIMEOUT_S = int(os.getenv('DOCKER_STOP_TIMEOUT_S', '12'))
 
     def __init__(self):
         self.container = None
         self.tmpdir = None
         self._stdin_socket = None
+        self._start_time: float | None = None
 
     def spawn(self, ws, binary_session_key):
         try:
+            self._start_time = time.time()
             self.tmpdir = os.path.join('/tmp/simples', f'exec-{uuid4().hex}')
             os.makedirs(self.tmpdir, exist_ok=True)
             binary_path = f'/tmp/simples/{binary_session_key}/programa'
@@ -53,6 +57,7 @@ class PtyExecutionStrategy:
                 security_opt=['no-new-privileges:true'],
                 tmpfs={'/tmp': 'size=8m,exec,nosuid,nodev,mode=1777'},
                 privileged=False,
+                stop_timeout=self.DOCKER_STOP_TIMEOUT_S,
             )
 
             self.container.start()
@@ -106,7 +111,20 @@ class PtyExecutionStrategy:
                     ws.send(json.dumps({'type': 'error', 'data': text}))
 
             if timeout_event.is_set():
-                ws.send(json.dumps({'type': 'timeout'}))
+                duration = time.time() - (self._start_time or 0)
+                logger.warning(
+                    'execution_timeout',
+                    timeout_s=self.TIMEOUT_SECONDS,
+                    duration_s=round(duration, 2),
+                )
+                ws.send(
+                    json.dumps(
+                        {
+                            'type': 'timeout',
+                            'limit_s': self.TIMEOUT_SECONDS,
+                        }
+                    )
+                )
                 self._force_kill()
             elif self.container is not None:
                 exit_code = self.container.wait()['StatusCode']
