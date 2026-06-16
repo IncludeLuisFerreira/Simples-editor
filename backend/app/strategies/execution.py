@@ -47,7 +47,7 @@ class PtyExecutionStrategy:
                 user='65534:65534',
                 pids_limit=32,
                 stdin_open=True,
-                tmpfs={'/tmp': 'size=64m,mode=1777'},
+                tmpfs={'/tmp': 'size=64m,exec,mode=1777'},
             )
 
             self.container.start()
