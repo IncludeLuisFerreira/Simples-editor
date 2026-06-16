@@ -14,6 +14,7 @@ def create_app():
     # Configurar structlog
     structlog.configure(
         processors=[
+            structlog.contextvars.merge_contextvars,
             structlog.stdlib.filter_by_level,
             structlog.stdlib.add_logger_name,
             structlog.stdlib.add_log_level,
@@ -28,6 +29,11 @@ def create_app():
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
+
+    # Inicializar request logging
+    from app.middleware.logging import register_request_logging
+
+    register_request_logging(app)
 
     # Inicializar rate limiter
     from app.middleware.ratelimit import limiter

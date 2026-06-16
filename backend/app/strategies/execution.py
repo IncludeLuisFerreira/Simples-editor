@@ -111,11 +111,12 @@ class PtyExecutionStrategy:
                     ws.send(json.dumps({'type': 'error', 'data': text}))
 
             if timeout_event.is_set():
-                duration = time.time() - (self._start_time or 0)
+                duration_ms = round((time.time() - (self._start_time or 0)) * 1000)
                 logger.warning(
-                    'execution_timeout',
+                    'execution_outcome',
+                    outcome='timeout',
                     timeout_s=self.TIMEOUT_SECONDS,
-                    duration_s=round(duration, 2),
+                    duration_ms=duration_ms,
                 )
                 ws.send(
                     json.dumps(
@@ -128,6 +129,13 @@ class PtyExecutionStrategy:
                 self._force_kill()
             elif self.container is not None:
                 exit_code = self.container.wait()['StatusCode']
+                duration_ms = round((time.time() - (self._start_time or 0)) * 1000)
+                logger.info(
+                    'execution_outcome',
+                    outcome='success',
+                    exit_code=exit_code,
+                    duration_ms=duration_ms,
+                )
                 ws.send(json.dumps({'type': 'exit', 'code': exit_code}))
         finally:
             timeout_greenlet.kill()

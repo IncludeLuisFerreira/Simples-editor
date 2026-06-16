@@ -1,9 +1,11 @@
 import json
 from urllib.parse import parse_qs
+from uuid import uuid4
 
 import structlog
 
 from app.middleware.auth import get_supabase
+from app.middleware.logging import hash_user_id
 from app.middleware.ratelimit import ws_rate_limiter
 from app.services.validation import validate_stdin
 from app.strategies.execution import PtyExecutionStrategy
@@ -25,7 +27,12 @@ def handle_execution_ws(ws):
         ws.close(4001, 'Invalid token')
         return
 
-    logger.info('execution_ws_connected', user_id=user_id)
+    structlog.contextvars.clear_contextvars()
+    structlog.contextvars.bind_contextvars(
+        request_id=uuid4().hex[:12],
+        user_id=hash_user_id(user_id),
+    )
+    logger.info('execution_ws_connected')
     strategy = PtyExecutionStrategy()
 
     try:
@@ -63,11 +70,11 @@ def handle_execution_ws(ws):
                 strategy.terminate(ws)
                 break
     except Exception as exc:
-        logger.exception('execution_ws_error', user_id=user_id)
+        logger.exception('execution_ws_error')
         try:
             ws.send(json.dumps({'type': 'error', 'data': f'Execution failed: {exc}'}))
         except Exception:
             pass
     finally:
         strategy.cleanup()
-        logger.info('execution_ws_disconnected', user_id=user_id)
+        logger.info('execution_ws_disconnected')
