@@ -1,7 +1,8 @@
+import io
 import json
 import os
 import shutil
-import tempfile
+import tarfile
 from uuid import uuid4
 
 import docker
@@ -31,23 +32,29 @@ class PtyExecutionStrategy:
             os.chmod(dest, 0o755)
 
             client = docker.from_env()
-            self.container = client.containers.run(
-            image=self.RUNNER_IMAGE,
-            command='./prog',
-            volumes={self.tmpdir: {'bind': '/sandbox', 'mode': 'ro'}},
-            working_dir='/sandbox',
-            remove=True,
-            read_only=True,
-            network_mode='none',
-            mem_limit='64m',
-            nano_cpus=500_000_000,
-            user='65534:65534',
-            pids_limit=32,
-            detach=True,
-            stdin_open=True,
-            stdout=True,
-            stderr=True,
+            self.container = client.containers.create(
+                image=self.RUNNER_IMAGE,
+                command='./prog',
+                working_dir='/sandbox',
+                remove=True,
+                read_only=True,
+                network_mode='none',
+                mem_limit='64m',
+                nano_cpus=500_000_000,
+                user='65534:65534',
+                pids_limit=32,
+                stdin_open=True,
+                stdout=True,
+                stderr=True,
             )
+
+            archive_data = io.BytesIO()
+            with tarfile.open(fileobj=archive_data, mode='w') as tar:
+                tar.add(dest, arcname='prog')
+            archive_data.seek(0)
+            self.container.put_archive('/sandbox', archive_data.read())
+
+            self.container.start()
 
             self._stdin_socket = self.container.attach_socket(
                 params={'stdin': 1, 'stream': 1})

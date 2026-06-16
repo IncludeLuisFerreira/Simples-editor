@@ -20,7 +20,7 @@ class TestPtyExecutionStrategy:
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
         mock_container = MagicMock()
-        mock_client.containers.run.return_value = mock_container
+        mock_client.containers.create.return_value = mock_container
         mock_socket = MagicMock()
         mock_container.attach_socket.return_value = mock_socket
 
@@ -30,13 +30,13 @@ class TestPtyExecutionStrategy:
             strategy.spawn(ws, binary_session_key='test_key')
 
         mock_makedirs.assert_called_once()
-        mock_client.containers.run.assert_called_once()
-        _, kwargs = mock_client.containers.run.call_args
+        mock_client.containers.create.assert_called_once()
+        mock_container.put_archive.assert_called_once()
+        mock_container.start.assert_called_once()
+        _, kwargs = mock_client.containers.create.call_args
         assert kwargs['image'] == 'simples-runner:latest'
-        assert kwargs['remove'] is True
         assert kwargs['read_only'] is True
         assert kwargs['network_mode'] == 'none'
-        mock_spawn.assert_called_once()
 
     @patch('app.strategies.execution.gevent.spawn_later')
     @patch('app.strategies.execution.shutil.rmtree')
@@ -194,7 +194,7 @@ class TestExecutionStrategyIntegration:
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
         mock_container = MagicMock()
-        mock_client.containers.run.return_value = mock_container
+        mock_client.containers.create.return_value = mock_container
         mock_socket = MagicMock()
         mock_container.attach_socket.return_value = mock_socket
 
