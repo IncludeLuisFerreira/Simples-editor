@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels'
 import { SimplesEditor, type CompileMarker } from '../components/SimplesEditor'
 import { NasmPanel } from '../components/NasmPanel'
-import { Terminal } from '../components/Terminal'
+import { Terminal, type TerminalHandle } from '../components/Terminal'
 import { useAuth } from '../lib/auth'
 import { useExecution } from '../hooks/useExecution'
 
@@ -32,6 +32,13 @@ function Index() {
     stop,
   } = useExecution()
   const [binaryKey, setBinaryKey] = useState<string | null>(null)
+  const terminalRef = useRef<TerminalHandle>(null)
+
+  useEffect(() => {
+    if (execState === 'running') {
+      terminalRef.current?.focus()
+    }
+  }, [execState])
 
   async function handleRun() {
     if (!session || isCompiling) return
@@ -111,12 +118,15 @@ function Index() {
                   : '▶ Run'}
         </button>
         {execState === 'running' && (
-          <button
-            onClick={stop}
-            className="px-4 py-1.5 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors"
-          >
-            ■ Stop
-          </button>
+          <>
+            <button
+              onClick={stop}
+              className="px-4 py-1.5 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors"
+            >
+              ■ Stop
+            </button>
+            <span className="text-sm text-cyan-400 animate-pulse">⏳ Aguardando input...</span>
+          </>
         )}
         {execState === 'finished' && exitCode !== null && (
           <span className={`text-sm ${exitCode === 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -150,7 +160,7 @@ function Index() {
         </Panel>
       </PanelGroup>
       <div className="h-48 border-t border-[#0f3460]">
-        <Terminal onInput={sendInput} onOutput={registerOutput} />
+        <Terminal ref={terminalRef} onInput={sendInput} onOutput={registerOutput} />
       </div>
     </div>
   )
