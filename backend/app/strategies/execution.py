@@ -14,6 +14,8 @@ logger = structlog.get_logger()
 class PtyExecutionStrategy:
     TIMEOUT_SECONDS = int(os.getenv('EXEC_TIMEOUT_S', '10'))
     RUNNER_IMAGE = os.getenv('RUNNER_IMAGE', 'simples-runner:latest')
+    MEM_LIMIT_MB = int(os.getenv('MEM_SANDBOX_LIMIT_MB', '128'))
+    PIDS_LIMIT = int(os.getenv('PIDS_SANDBOX_LIMIT', '64'))
 
     def __init__(self):
         self.container = None
@@ -41,12 +43,16 @@ class PtyExecutionStrategy:
                 working_dir='/sandbox',
                 read_only=True,
                 network_mode='none',
-                mem_limit='64m',
+                mem_limit=f'{self.MEM_LIMIT_MB}m',
+                memswap_limit=f'{self.MEM_LIMIT_MB}m',
                 nano_cpus=500_000_000,
                 user='65534:65534',
-                pids_limit=32,
+                pids_limit=self.PIDS_LIMIT,
                 stdin_open=True,
-                tmpfs={'/tmp': 'size=64m,exec,mode=1777'},
+                cap_drop=['ALL'],
+                security_opt=['no-new-privileges:true'],
+                tmpfs={'/tmp': 'size=8m,exec,nosuid,nodev,mode=1777'},
+                privileged=False,
             )
 
             self.container.start()
