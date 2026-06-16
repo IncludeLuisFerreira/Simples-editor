@@ -17,6 +17,7 @@ class Config:
 
     # Timeouts
     EXEC_TIMEOUT_S = int(os.getenv('EXEC_TIMEOUT_S', '10'))
+    EXEC_TIMEOUT_S_ARM64 = int(os.getenv('EXEC_TIMEOUT_S_ARM64', '15'))
     COMPILE_TIMEOUT_S = int(os.getenv('COMPILE_TIMEOUT_S', '15'))
     ASSEMBLE_TIMEOUT_S = int(os.getenv('ASSEMBLE_TIMEOUT_S', '10'))
     LINK_TIMEOUT_S = int(os.getenv('LINK_TIMEOUT_S', '10'))

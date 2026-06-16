@@ -1,5 +1,6 @@
 import json
 import os
+import platform
 import shutil
 import time
 from uuid import uuid4
@@ -14,8 +15,17 @@ from app.services.metrics import active_sandboxes, execution_duration, execution
 logger = structlog.get_logger()
 
 
+HOST_ARCH = platform.machine()
+
+
+def _get_exec_timeout() -> int:
+    if HOST_ARCH == 'aarch64':
+        return int(os.getenv('EXEC_TIMEOUT_S_ARM64', '15'))
+    return int(os.getenv('EXEC_TIMEOUT_S', '10'))
+
+
 class PtyExecutionStrategy:
-    TIMEOUT_SECONDS = int(os.getenv('EXEC_TIMEOUT_S', '10'))
+    TIMEOUT_SECONDS = _get_exec_timeout()
     RUNNER_IMAGE = os.getenv('RUNNER_IMAGE', 'simples-runner:latest')
     MEM_LIMIT_MB = int(os.getenv('MEM_SANDBOX_LIMIT_MB', '128'))
     PIDS_LIMIT = int(os.getenv('PIDS_SANDBOX_LIMIT', '64'))
@@ -38,9 +48,8 @@ class PtyExecutionStrategy:
             os.chmod(dest, 0o755)
 
             binary_size = os.path.getsize(dest)
-            command = (
-                f'sh -c "head -c {binary_size} > /tmp/prog && chmod +x /tmp/prog && /tmp/prog"'
-            )
+            runner = 'qemu-i386-static /tmp/prog' if HOST_ARCH == 'aarch64' else '/tmp/prog'
+            command = f'sh -c "head -c {binary_size} > /tmp/prog && chmod +x /tmp/prog && {runner}"'
 
             client = docker.from_env()
             self.container = client.containers.create(
@@ -79,6 +88,8 @@ class PtyExecutionStrategy:
                 image=self.RUNNER_IMAGE,
                 key=binary_session_key,
                 size=binary_size,
+                host_arch=HOST_ARCH,
+                timeout_s=self.TIMEOUT_SECONDS,
             )
             gevent.spawn(self._stream_output, ws, socket)
         except Exception:
