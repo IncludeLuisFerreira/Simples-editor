@@ -3,7 +3,9 @@ import { useState } from 'react'
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels'
 import { SimplesEditor, type CompileMarker } from '../components/SimplesEditor'
 import { NasmPanel } from '../components/NasmPanel'
+import { Terminal } from '../components/Terminal'
 import { useAuth } from '../lib/auth'
+import { useExecution } from '../hooks/useExecution'
 
 export const Route = createFileRoute('/')({ component: Index })
 
@@ -20,6 +22,16 @@ function Index() {
   const [nasmErrorLog, setNasmErrorLog] = useState('')
   const [markers, setMarkers] = useState<CompileMarker[]>([])
   const [infraError, setInfraError] = useState<string | null>(null)
+  const {
+    state: execState,
+    exitCode,
+    error: execError,
+    registerOutput,
+    execute,
+    sendInput,
+    stop,
+  } = useExecution()
+  const [binaryKey, setBinaryKey] = useState<string | null>(null)
 
   async function handleRun() {
     if (!session || isCompiling) return
@@ -40,6 +52,7 @@ function Index() {
       })
       const data: {
         asm?: string
+        binary_key?: string
         error?: string
         phase?: string
         line?: number
@@ -48,6 +61,10 @@ function Index() {
       if (resp.ok && data.asm) {
         setNasmAsm(data.asm)
         setNasmState('success')
+        if (data.binary_key) {
+          setBinaryKey(data.binary_key)
+          execute(data.binary_key)
+        }
       } else {
         const phase = data.phase ?? ''
         if (SIMPLESC_PHASES.has(phase) && data.line != null && data.column != null) {
@@ -78,11 +95,38 @@ function Index() {
       <div className="flex items-center gap-3 px-4 py-2 bg-[#16213e] border-b border-[#0f3460]">
         <button
           onClick={handleRun}
-          disabled={isCompiling || !session}
+          disabled={
+            isCompiling || !session || execState === 'running' || execState === 'connecting' || execState === 'stopping'
+          }
           className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
         >
-          {isCompiling ? 'Compilando...' : '▶ Run'}
+          {isCompiling
+            ? 'Compilando...'
+            : execState === 'running'
+              ? '▶ Executando...'
+              : execState === 'connecting'
+                ? 'Conectando...'
+                : execState === 'stopping'
+                  ? 'Parando...'
+                  : '▶ Run'}
         </button>
+        {execState === 'running' && (
+          <button
+            onClick={stop}
+            className="px-4 py-1.5 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors"
+          >
+            ■ Stop
+          </button>
+        )}
+        {execState === 'finished' && exitCode !== null && (
+          <span className={`text-sm ${exitCode === 0 ? 'text-green-400' : 'text-red-400'}`}>
+            Exit code: {exitCode}
+          </span>
+        )}
+        {execState === 'timeout' && <span className="text-sm text-yellow-400">Timeout (10s)</span>}
+        {execState === 'error' && execError && (
+          <span className="text-sm text-red-400">{execError}</span>
+        )}
       </div>
       {infraError && (
         <div className="flex items-center gap-2 px-4 py-2 bg-red-900/40 border-b border-red-700 text-red-300 text-sm">
@@ -98,13 +142,16 @@ function Index() {
       )}
       <PanelGroup orientation="horizontal" className="flex-1 min-h-0">
         <Panel defaultSize={55} minSize={25}>
-          <SimplesEditor value={code} onChange={setCode} readOnly={isCompiling} markers={markers} />
+          <SimplesEditor value={code} onChange={setCode} readOnly={isCompiling || execState === 'running'} markers={markers} />
         </Panel>
         <PanelResizeHandle className="w-1 bg-[#0f3460] hover:bg-cyan-700 transition-colors cursor-col-resize" />
         <Panel defaultSize={45} minSize={20}>
           <NasmPanel state={nasmState} asm={nasmAsm} errorLog={nasmErrorLog} />
         </Panel>
       </PanelGroup>
+      <div className="h-48 border-t border-[#0f3460]">
+        <Terminal onInput={sendInput} onOutput={registerOutput} />
+      </div>
     </div>
   )
 }
