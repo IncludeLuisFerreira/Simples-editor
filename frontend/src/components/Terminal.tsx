@@ -12,6 +12,17 @@ export interface TerminalHandle {
   clear: () => void
 }
 
+function writeBanner(term: XtermTerminal) {
+  const c = '\x1b[1;36m'
+  const r = '\x1b[0m'
+  term.writeln('')
+  term.writeln(`  ${c}\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510${r}`)
+  term.writeln(`  ${c}\u2502${r}   \x1b[1;37mSIMPLES TERMINAL\x1b[0m              ${c}\u2502${r}`)
+  term.writeln(`  ${c}\u2502${r}   Digite seu input e pressione Enter  ${c}\u2502${r}`)
+  term.writeln(`  ${c}\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518${r}`)
+  term.writeln('')
+}
+
 export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
   function Terminal({ onInput, onOutput }, ref) {
     const terminalRef = useRef<HTMLDivElement>(null)
@@ -22,10 +33,10 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
       focus: () => xtermRef.current?.focus(),
       clear: () => {
         const term = xtermRef.current
-        if (term) {
-          term.clear()
-          bufferRef.current = ''
-        }
+        if (!term) return
+        term.clear()
+        bufferRef.current = ''
+        writeBanner(term)
       },
     }))
 
@@ -43,10 +54,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
       term.open(terminalRef.current)
       xtermRef.current = term
 
-      term.writeln('\x1b[1;36m\u250c\u2500\u2500\u2500 Simples Terminal \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2510\x1b[0m')
-      term.writeln('\x1b[1;36m\u2502\x1b[0m  Compile e clique Run para executar        \x1b[1;36m\u2502\x1b[0m')
-      term.writeln('\x1b[1;36m\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\x1b[0m')
-      term.writeln('')
+      writeBanner(term)
 
       onOutput((data: string) => {
         term.write(data)
