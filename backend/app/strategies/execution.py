@@ -31,8 +31,7 @@ class PtyExecutionStrategy:
 
             binary_size = os.path.getsize(dest)
             command = (
-                f'sh -c "head -c {binary_size} > /tmp/prog && '
-                f'chmod +x /tmp/prog && /tmp/prog"'
+                f'sh -c "head -c {binary_size} > /tmp/prog && chmod +x /tmp/prog && /tmp/prog"'
             )
 
             client = docker.from_env()
@@ -52,10 +51,10 @@ class PtyExecutionStrategy:
 
             self.container.start()
 
-            self._stdin_socket = self.container.attach_socket(
-                params={'stdin': 1, 'stream': 1})
+            self._stdin_socket = self.container.attach_socket(params={'stdin': 1, 'stream': 1})
             socket = self.container.attach_socket(
-                params={'stdin': 1, 'stdout': 1, 'stderr': 1, 'stream': 1})
+                params={'stdin': 1, 'stdout': 1, 'stderr': 1, 'stream': 1}
+            )
 
             with open(dest, 'rb') as f:
                 binary_data = f.read()

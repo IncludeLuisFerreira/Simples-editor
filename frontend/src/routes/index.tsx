@@ -31,7 +31,6 @@ function Index() {
     sendInput,
     stop,
   } = useExecution()
-  const [binaryKey, setBinaryKey] = useState<string | null>(null)
   const terminalRef = useRef<TerminalHandle>(null)
 
   useEffect(() => {
@@ -70,7 +69,6 @@ function Index() {
         setNasmAsm(data.asm)
         setNasmState('success')
         if (data.binary_key) {
-          setBinaryKey(data.binary_key)
           execute(data.binary_key)
         }
       } else {
@@ -104,7 +102,11 @@ function Index() {
         <button
           onClick={handleRun}
           disabled={
-            isCompiling || !session || execState === 'running' || execState === 'connecting' || execState === 'stopping'
+            isCompiling ||
+            !session ||
+            execState === 'running' ||
+            execState === 'connecting' ||
+            execState === 'stopping'
           }
           className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
         >
@@ -153,7 +155,12 @@ function Index() {
       )}
       <PanelGroup orientation="horizontal" className="flex-1 min-h-0">
         <Panel defaultSize={55} minSize={25}>
-          <SimplesEditor value={code} onChange={setCode} readOnly={isCompiling || execState === 'running'} markers={markers} />
+          <SimplesEditor
+            value={code}
+            onChange={setCode}
+            readOnly={isCompiling || execState === 'running'}
+            markers={markers}
+          />
         </Panel>
         <PanelResizeHandle className="w-1 bg-[#0f3460] hover:bg-cyan-700 transition-colors cursor-col-resize" />
         <Panel defaultSize={45} minSize={20}>

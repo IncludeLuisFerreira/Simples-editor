@@ -1,7 +1,14 @@
 import { useReducer, useRef, useCallback } from 'react'
 import { useAuth } from '../lib/auth'
 
-type ExecutionState = 'idle' | 'connecting' | 'running' | 'stopping' | 'finished' | 'error' | 'timeout'
+type ExecutionState =
+  | 'idle'
+  | 'connecting'
+  | 'running'
+  | 'stopping'
+  | 'finished'
+  | 'error'
+  | 'timeout'
 
 type ExecutionAction =
   | { type: 'CONNECT' }
@@ -76,7 +83,9 @@ export function useExecution(): ExecutionContext {
       }
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const ws = new WebSocket(`${protocol}//${window.location.host}/ws/run?token=${session.access_token}`)
+      const ws = new WebSocket(
+        `${protocol}//${window.location.host}/ws/run?token=${session.access_token}`,
+      )
       wsRef.current = ws
 
       ws.onopen = () => {
@@ -117,14 +126,14 @@ export function useExecution(): ExecutionContext {
         }
       }
     },
-    [session]
+    [session],
   )
 
   const execute = useCallback(
     (binaryKey: string) => {
       connect(binaryKey)
     },
-    [connect]
+    [connect],
   )
 
   const sendInput = useCallback((data: string) => {

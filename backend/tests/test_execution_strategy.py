@@ -15,8 +15,14 @@ class TestPtyExecutionStrategy:
     @patch('app.strategies.execution.uuid4')
     @patch('app.strategies.execution.docker.from_env')
     def test_spawn_creates_tmpdir_and_container(
-        self, mock_docker, mock_uuid4, mock_makedirs, mock_getsize,
-        mock_chmod, mock_copy, mock_rmtree,
+        self,
+        mock_docker,
+        mock_uuid4,
+        mock_makedirs,
+        mock_getsize,
+        mock_chmod,
+        mock_copy,
+        mock_rmtree,
     ):
         mock_uuid4.return_value.hex = 'testabc123'
         mock_getsize.return_value = 128
@@ -29,8 +35,7 @@ class TestPtyExecutionStrategy:
 
         ws = MagicMock()
         strategy = PtyExecutionStrategy()
-        with patch('app.strategies.execution.gevent.spawn') as mock_spawn, \
-             patch('builtins.open', create=True):
+        with patch('app.strategies.execution.gevent.spawn'), patch('builtins.open', create=True):
             strategy.spawn(ws, binary_session_key='test_key')
 
         mock_makedirs.assert_called_once()

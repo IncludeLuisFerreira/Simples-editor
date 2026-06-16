@@ -176,7 +176,8 @@ class TestCompilerServiceFull:
 
         ok = MagicMock(returncode=0, stdout=b'', stderr=b'')
         fail_nasm = MagicMock(
-            returncode=1, stdout=b'',
+            returncode=1,
+            stdout=b'',
             stderr=b'output.asm:5: error: invalid combination of opcode and operands\n',
         )
         mock_run.side_effect = [ok, fail_nasm]  # simplesc ok, nasm falha
@@ -206,7 +207,8 @@ class TestCompilerServiceFull:
 
         ok = MagicMock(returncode=0, stdout=b'', stderr=b'')
         fail_ld = MagicMock(
-            returncode=1, stdout=b'',
+            returncode=1,
+            stdout=b'',
             stderr=b"output.o: undefined reference to `_start'\n",
         )
         mock_run.side_effect = [ok, ok, fail_ld]  # simplesc ok, nasm ok, ld falha
