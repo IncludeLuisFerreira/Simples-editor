@@ -2,6 +2,7 @@ import structlog
 from flask import Blueprint, jsonify, request
 
 from app.middleware.auth import require_auth
+from app.middleware.ratelimit import get_user_id, limiter
 from app.services.compiler import CompilerService
 
 bp = Blueprint('compile', __name__, url_prefix='/api')
@@ -11,6 +12,7 @@ compiler = CompilerService()
 
 @bp.route('/compile', methods=['POST'])
 @require_auth
+@limiter.limit('30 per minute', key_func=get_user_id)
 def handle_compile():
     data = request.get_json()
     if not data or 'code' not in data:

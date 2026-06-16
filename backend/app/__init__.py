@@ -1,5 +1,6 @@
 import structlog
-from flask import Flask
+from flask import Flask, jsonify
+from flask_limiter.errors import RateLimitExceeded
 from flask_sock import Sock
 
 
@@ -25,6 +26,16 @@ def create_app():
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
+
+    # Inicializar rate limiter
+    from app.middleware.ratelimit import limiter
+
+    limiter.init_app(app)
+
+    @app.errorhandler(RateLimitExceeded)
+    def handle_rate_limit(exc):
+        logger.warning('rate_limit_exceeded', path=request.path)
+        return jsonify({'error': 'Rate limit exceeded. Please wait before making more requests.'}), 429
 
     # Inicializar flask-sock
     _sock = Sock(app)

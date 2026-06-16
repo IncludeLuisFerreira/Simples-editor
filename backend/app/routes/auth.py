@@ -3,6 +3,8 @@ import os
 from flask import Blueprint, jsonify, request
 from supabase import Client, create_client
 
+from app.middleware.ratelimit import get_user_id, limiter
+
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
 _supabase: Client | None = None
@@ -20,6 +22,7 @@ def get_supabase() -> Client:
 
 
 @bp.route('/verify', methods=['POST'])
+@limiter.limit('60 per minute', key_func=get_user_id)
 def verify():
     data = request.get_json()
     token = data.get('token') if data else None

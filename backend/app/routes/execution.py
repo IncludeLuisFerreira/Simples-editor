@@ -4,6 +4,7 @@ from urllib.parse import parse_qs
 import structlog
 
 from app.middleware.auth import get_supabase
+from app.middleware.ratelimit import ws_rate_limiter
 from app.strategies.execution import PtyExecutionStrategy
 
 logger = structlog.get_logger()
@@ -37,6 +38,12 @@ def handle_execution_ws(ws):
                 continue
             msg_type = data.get('type', '')
             if msg_type == 'execute':
+                if not ws_rate_limiter.check(user_id):
+                    ws.send(json.dumps({
+                        'type': 'error',
+                        'data': 'Rate limit exceeded. Maximo de 30 execucoes por minuto.',
+                    }))
+                    continue
                 binary_key = data.get('binary_key', '')
                 if binary_key:
                     strategy.spawn(ws, binary_session_key=binary_key)
