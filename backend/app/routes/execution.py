@@ -39,10 +39,14 @@ def handle_execution_ws(ws):
             msg_type = data.get('type', '')
             if msg_type == 'execute':
                 if not ws_rate_limiter.check(user_id):
-                    ws.send(json.dumps({
-                        'type': 'error',
-                        'data': 'Rate limit exceeded. Maximo de 30 execucoes por minuto.',
-                    }))
+                    ws.send(
+                        json.dumps(
+                            {
+                                'type': 'error',
+                                'data': 'Rate limit exceeded. Maximo de 30 execucoes por minuto.',
+                            }
+                        )
+                    )
                     continue
                 binary_key = data.get('binary_key', '')
                 if binary_key:

@@ -2,7 +2,7 @@ import time
 from collections import defaultdict
 
 import structlog
-from flask import g, request
+from flask import g
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
