@@ -27,7 +27,10 @@ def handle_execution_ws(ws):
     strategy = PtyExecutionStrategy()
 
     try:
-        for msg in ws:
+        while True:
+            msg = ws.receive()
+            if msg is None:
+                break
             try:
                 data = json.loads(msg)
             except json.JSONDecodeError:
