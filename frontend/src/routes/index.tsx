@@ -42,6 +42,7 @@ function Index() {
 
   async function handleRun() {
     if (!session || isCompiling) return
+    terminalRef.current?.clear()
     setIsCompiling(true)
     setNasmState('compiling')
     setMarkers([])

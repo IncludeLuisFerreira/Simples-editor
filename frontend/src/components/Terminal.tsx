@@ -9,6 +9,7 @@ interface TerminalProps {
 
 export interface TerminalHandle {
   focus: () => void
+  clear: () => void
 }
 
 export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
@@ -19,6 +20,13 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
 
     useImperativeHandle(ref, () => ({
       focus: () => xtermRef.current?.focus(),
+      clear: () => {
+        const term = xtermRef.current
+        if (term) {
+          term.clear()
+          bufferRef.current = ''
+        }
+      },
     }))
 
     useEffect(() => {
