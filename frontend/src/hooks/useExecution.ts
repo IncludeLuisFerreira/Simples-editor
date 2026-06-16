@@ -70,6 +70,11 @@ export function useExecution(): ExecutionContext {
       if (!session) return
       dispatch({ type: 'CONNECT' })
 
+      if (wsRef.current) {
+        wsRef.current.close()
+        wsRef.current = null
+      }
+
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const ws = new WebSocket(`${protocol}//${window.location.host}/ws/run?token=${session.access_token}`)
       wsRef.current = ws

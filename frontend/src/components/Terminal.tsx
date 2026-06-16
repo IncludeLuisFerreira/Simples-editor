@@ -34,7 +34,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
       clear: () => {
         const term = xtermRef.current
         if (!term) return
-        term.clear()
+        term.write('\x1b[2J\x1b[H')
         bufferRef.current = ''
         writeBanner(term)
       },
