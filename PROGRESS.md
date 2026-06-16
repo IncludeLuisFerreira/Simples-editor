@@ -1,6 +1,6 @@
 # 📊 Simples Editor — Progresso de Implementação
-**Última atualização:** 2026-06-08 14:15
-**Progresso geral:** 16/46 issues (35%)
+**Última atualização:** 2026-06-15
+**Progresso geral:** 27/46 issues (59%)
 ---
 
 ## Sprint 1 — Fundação e Autenticação (7/7)
@@ -12,22 +12,22 @@
 - [x] #13 feat(devops): setup CI/CD pipeline
 - [x] #14 docs(readme): create initial documentation
 
-## Sprint 2 — Editor e Compilador (2/6)
-- [ ] #15 feat(editor): add Monaco SIMPLES tokenizer
+## Sprint 2 — Editor e Compilador (6/6)
+- [x] #15 feat(editor): add Monaco SIMPLES tokenizer
 - [x] #16 feat(editor): integrate Monaco component
 - [x] #17 feat(backend): compile endpoint with simplesc
-- [ ] #18 feat(backend): add nasm and ld toolchain
-- [ ] #19 feat(frontend): add NASM viewer panel
-- [ ] #20 feat(editor): highlight compile errors with markers
+- [x] #18 feat(backend): add nasm and ld toolchain
+- [x] #19 feat(frontend): add NASM viewer panel
+- [x] #20 feat(editor): highlight compile errors with markers
 
-## Sprint 3 — Execução e Terminal (0/7)
-- [ ] #21 feat(backend): /ws/run WebSocket endpoint
-- [ ] #22 feat(backend): build sandbox runner image
-- [ ] #23 feat(backend): implement PtyExecutionStrategy
-- [ ] #24 feat(backend): add execution timeout handling
-- [ ] #25 feat(frontend): integrate xterm.js terminal
-- [ ] #26 feat(frontend): implement WebSocket client state machine
-- [ ] #27 feat(frontend): add Run and Stop buttons
+## Sprint 3 — Execução e Terminal (7/7)
+- [x] #21 feat(backend): /ws/run WebSocket endpoint
+- [x] #22 feat(backend): build sandbox runner image
+- [x] #23 feat(backend): implement PtyExecutionStrategy
+- [x] #24 feat(backend): add execution timeout handling
+- [x] #25 feat(frontend): integrate xterm.js terminal
+- [x] #26 feat(frontend): implement WebSocket client state machine
+- [x] #27 feat(frontend): add Run and Stop buttons
 
 ## Sprint 4 — Segurança e Limites (0/6)
 - [ ] #28 feat(security): harden sandbox container

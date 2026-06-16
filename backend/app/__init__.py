@@ -29,12 +29,16 @@ def create_app():
     # Inicializar flask-sock
     _sock = Sock(app)
 
+    # Registrar rota WebSocket
+    from app.routes.execution import handle_execution_ws
+
+    _sock.route('/ws/run')(handle_execution_ws)
+
     # Registrar blueprints
-    from app.routes import auth, build, compile, health
+    from app.routes import auth, compile, health
 
     app.register_blueprint(health.bp)
     app.register_blueprint(auth.bp)
-    app.register_blueprint(build.bp)
     app.register_blueprint(compile.bp)
 
     return app

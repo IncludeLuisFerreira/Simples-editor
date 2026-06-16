@@ -1,0 +1,94 @@
+<h2>Layout Frontend + Tratamento de Erros</h2>
+<p class="subtitle">3 painéis: Editor | NASM | Terminal + Tabela de erros</p>
+
+<div class="mockup">
+  <div class="mockup-header">Layout 3 Painéis (modificação em index.tsx)</div>
+  <div class="mockup-body">
+    <div style="display:flex;flex-direction:column;gap:0;border:1px solid #1a1a2e;border-radius:8px;overflow:hidden;">
+      <div style="display:flex;background:#16213e;padding:8px 16px;color:#00d4ff;font-size:12px;font-weight:bold;justify-content:space-between;">
+        <span>Simples Editor</span>
+        <span style="display:flex;gap:8px;">
+          <span style="background:#00d4ff;color:#0a0a1a;padding:2px 12px;border-radius:4px;font-size:11px;">Run ▸</span>
+          <span style="background:#e94560;color:#fff;padding:2px 12px;border-radius:4px;font-size:11px;">Stop ■</span>
+        </span>
+      </div>
+      <div style="display:flex;flex:1;min-height:400px;">
+        <div style="flex:1;border-right:1px solid #1a1a2e;background:#0a0a1a;padding:8px;">
+          <div style="color:#888;font-size:10px;margin-bottom:4px;">Editor (SIMPLES)</div>
+          <div style="color:#4a9;font-size:12px;font-family:monospace;">programa echo<br/>inteiro x<br/><br/>inicio<br/>  leia x<br/>  escreva x<br/>fim</div>
+        </div>
+        <div style="flex:1;border-right:1px solid #1a1a2e;background:#0a0a1a;padding:8px;">
+          <div style="color:#888;font-size:10px;margin-bottom:4px;">NASM (read-only)</div>
+          <div style="color:#777;font-size:12px;font-family:monospace;">section .text<br/>global _start<br/>_start:<br/>  ...</div>
+        </div>
+      </div>
+      <div style="background:#000;border-top:1px solid #1a1a2e;padding:8px;min-height:120px;">
+        <div style="color:#888;font-size:10px;margin-bottom:4px;">Terminal (xterm.js)</div>
+        <div style="color:#0f0;font-size:12px;font-family:monospace;">$ ./programa<br/><span style="color:#fff;">5</span><br/>5<br/><span style="color:#888;">[exit code: 0]</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Tabela de Erros (Backend → Frontend)</div>
+    <div class="mockup-body">
+      <table style="width:100%;border-collapse:collapse;font-family:monospace;font-size:11px;">
+        <thead>
+          <tr style="background:#16213e;color:#00d4ff;">
+            <th style="padding:6px;text-align:left;">Cenário</th>
+            <th style="padding:6px;text-align:left;">Mensagem WS</th>
+            <th style="padding:6px;text-align:left;">UX</th>
+          </tr>
+        </thead>
+        <tbody style="color:#ccc;">
+          <tr style="border-bottom:1px solid #1a1a2e;">
+            <td style="padding:6px;">JWT inválido</td>
+            <td style="padding:6px;">WS close 4001</td>
+            <td style="padding:6px;color:#e94560;">"Sessão expirada"</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1a1a2e;">
+            <td style="padding:6px;">Binário não encontrado</td>
+            <td style="padding:6px;"><code>{"type":"error","data":"..."}</code></td>
+            <td style="padding:6px;color:#f0c000;">"Compile antes de executar"</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1a1a2e;">
+            <td style="padding:6px;">Docker indisponível</td>
+            <td style="padding:6px;">WS close 5000</td>
+            <td style="padding:6px;color:#e94560;">"Serviço indisponível"</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1a1a2e;">
+            <td style="padding:6px;">Timeout (10s)</td>
+            <td style="padding:6px;"><code>{"type":"timeout"}</code></td>
+            <td style="padding:6px;color:#f0c000;">"Execução interrompida (10s)"</td>
+          </tr>
+          <tr>
+            <td style="padding:6px;">Segfault / crash</td>
+            <td style="padding:6px;"><code>{"type":"exit","code":139}</code></td>
+            <td style="padding:6px;color:#e94560;">"Erro de execução (139)"</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">Segurança por Container</div>
+    <div class="mockup-body">
+      <div style="font-family:monospace;font-size:12px;color:#ccc;line-height:2;">
+        <div><code style="color:#00d4ff;">docker run</code></div>
+        <div>  <span style="color:#4a9;">--rm</span>            destruir ao sair</div>
+        <div>  <span style="color:#4a9;">--read-only</span>     FS imutável</div>
+        <div>  <span style="color:#4a9;">--network=none</span>  sem rede</div>
+        <div>  <span style="color:#4a9;">--memory=64m</span>    limite RAM</div>
+        <div>  <span style="color:#4a9;">--cpus=0.5</span>      meio core</div>
+        <div>  <span style="color:#4a9;">--user=65534</span>    nobody</div>
+        <div>  <span style="color:#4a9;">--stop-timeout=2</span> kill safety</div>
+        <div>  <span style="color:#4a9;">--pids-limit=32</span>  max 32 processos</div>
+        <div style="margin-top:8px;">  <span style="color:#4a9;">-v /tmp/binary:/sandbox/prog:ro</span></div>
+        <div>  <span style="color:#00d4ff;">simples-runner:latest</span></div>
+        <div>  <span style="color:#4a9;">./prog</span></div>
+      </div>
+    </div>
+  </div>
+</div>

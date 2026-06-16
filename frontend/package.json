@@ -15,9 +15,11 @@
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.107.0",
     "@tanstack/react-router": "^1.80.1",
+    "@xterm/xterm": "^6.0.0",
     "monaco-editor": "^0.52.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-resizable-panels": "^4.11.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
