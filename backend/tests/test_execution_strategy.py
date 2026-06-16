@@ -53,13 +53,15 @@ class TestPtyExecutionStrategy:
         stdout_header = bytes([1, 0, 0, 0, 0, 0, 0, 6])
         stdout_payload = b'hello\n'
         mock_socket._sock.recv.side_effect = [
-            stdout_header + stdout_payload,
+            stdout_header,
+            stdout_payload,
             b'',
         ]
         mock_container.wait.return_value = {'StatusCode': 0}
 
         ws = MagicMock()
         strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
         strategy._stream_output(ws, mock_socket)
 
         ws.send.assert_any_call(json.dumps({'type': 'output', 'data': 'hello\n'}))
@@ -82,6 +84,7 @@ class TestPtyExecutionStrategy:
 
         ws = MagicMock()
         strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
         strategy._stream_output(ws, mock_socket)
 
         ws.send.assert_any_call(json.dumps({'type': 'exit', 'code': 42}))
@@ -188,13 +191,15 @@ class TestPtyExecutionStrategy:
         stderr_header = bytes([2, 0, 0, 0, 0, 0, 0, 20])
         stderr_payload = b'segmentation fault\n'
         mock_socket._sock.recv.side_effect = [
-            stderr_header + stderr_payload,
+            stderr_header,
+            stderr_payload,
             b'',
         ]
         mock_container.wait.return_value = {'StatusCode': 139}
 
         ws = MagicMock()
         strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
         strategy._stream_output(ws, mock_socket)
 
         ws.send.assert_any_call(json.dumps({'type': 'error', 'data': 'segmentation fault\n'}))
@@ -215,8 +220,9 @@ class TestExecutionStrategyIntegration:
         mock_socket = MagicMock()
         mock_container.attach_socket.return_value = mock_socket
 
-        stdout = bytes([1, 0, 0, 0, 0, 0, 0, 3]) + b'ok\n'
-        mock_socket._sock.recv.side_effect = [stdout, b'']
+        stdout_header = bytes([1, 0, 0, 0, 0, 0, 0, 3])
+        stdout_payload = b'ok\n'
+        mock_socket._sock.recv.side_effect = [stdout_header, stdout_payload, b'']
         mock_container.wait.return_value = {'StatusCode': 0}
 
         ws = MagicMock()
