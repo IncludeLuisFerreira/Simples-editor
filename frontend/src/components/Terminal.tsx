@@ -39,7 +39,7 @@ export function Terminal({ onInput, onOutput }: TerminalProps) {
     if (!term) return
 
     const disposable = term.onData((data) => {
-      onInput(data)
+      onInput(data.replace(/\r\n?/g, '\n'))
     })
 
     return () => {
