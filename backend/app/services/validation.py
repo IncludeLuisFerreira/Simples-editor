@@ -1,16 +1,32 @@
 import unicodedata
 
-
 MAX_CODE_BYTES = 64 * 1024
 MAX_STDIN_BYTES = 4 * 1024
 
 ALLOWED_CATEGORIES = {
-    'Ll', 'Lu', 'Lt', 'Lm', 'Lo',
-    'Nd', 'Nl', 'No',
-    'Pc', 'Pd', 'Ps', 'Pe', 'Pi', 'Pf', 'Po',
-    'Sc', 'Sm', 'Sk', 'So',
+    'Ll',
+    'Lu',
+    'Lt',
+    'Lm',
+    'Lo',
+    'Nd',
+    'Nl',
+    'No',
+    'Pc',
+    'Pd',
+    'Ps',
+    'Pe',
+    'Pi',
+    'Pf',
+    'Po',
+    'Sc',
+    'Sm',
+    'Sk',
+    'So',
     'Zs',
-    'Mn', 'Mc', 'Me',
+    'Mn',
+    'Mc',
+    'Me',
 }
 
 CONTROL_ALLOWED = {'\t', '\n', '\r'}
