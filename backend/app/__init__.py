@@ -58,10 +58,11 @@ def create_app():
     _sock.route('/ws/run')(handle_execution_ws)
 
     # Registrar blueprints
-    from app.routes import auth, compile, health
+    from app.routes import auth, compile, health, metrics
 
     app.register_blueprint(health.bp)
     app.register_blueprint(auth.bp)
     app.register_blueprint(compile.bp)
+    app.register_blueprint(metrics.bp)
 
     return app

@@ -7,6 +7,7 @@ import structlog
 from app.middleware.auth import get_supabase
 from app.middleware.logging import hash_user_id
 from app.middleware.ratelimit import ws_rate_limiter
+from app.services.metrics import websocket_connections
 from app.services.validation import validate_stdin
 from app.strategies.execution import PtyExecutionStrategy
 
@@ -32,6 +33,7 @@ def handle_execution_ws(ws):
         request_id=uuid4().hex[:12],
         user_id=hash_user_id(user_id),
     )
+    websocket_connections.inc()
     logger.info('execution_ws_connected')
     strategy = PtyExecutionStrategy()
 
@@ -76,5 +78,6 @@ def handle_execution_ws(ws):
         except Exception:
             pass
     finally:
+        websocket_connections.dec()
         strategy.cleanup()
         logger.info('execution_ws_disconnected')

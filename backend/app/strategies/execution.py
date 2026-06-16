@@ -9,6 +9,8 @@ import gevent
 import gevent.event
 import structlog
 
+from app.services.metrics import active_sandboxes, execution_duration, executions_total
+
 logger = structlog.get_logger()
 
 
@@ -61,6 +63,7 @@ class PtyExecutionStrategy:
             )
 
             self.container.start()
+            active_sandboxes.inc()
 
             self._stdin_socket = self.container.attach_socket(params={'stdin': 1, 'stream': 1})
             socket = self.container.attach_socket(
@@ -111,13 +114,15 @@ class PtyExecutionStrategy:
                     ws.send(json.dumps({'type': 'error', 'data': text}))
 
             if timeout_event.is_set():
-                duration_ms = round((time.time() - (self._start_time or 0)) * 1000)
+                duration_s = time.time() - (self._start_time or 0)
                 logger.warning(
                     'execution_outcome',
                     outcome='timeout',
                     timeout_s=self.TIMEOUT_SECONDS,
-                    duration_ms=duration_ms,
+                    duration_s=round(duration_s, 2),
                 )
+                execution_duration.labels(outcome='timeout').observe(duration_s)
+                executions_total.labels(outcome='timeout').inc()
                 ws.send(
                     json.dumps(
                         {
@@ -129,12 +134,15 @@ class PtyExecutionStrategy:
                 self._force_kill()
             elif self.container is not None:
                 exit_code = self.container.wait()['StatusCode']
-                duration_ms = round((time.time() - (self._start_time or 0)) * 1000)
+                duration_s = time.time() - (self._start_time or 0)
+                outcome = 'success' if exit_code == 0 else 'error'
+                execution_duration.labels(outcome=outcome).observe(duration_s)
+                executions_total.labels(outcome=outcome).inc()
                 logger.info(
                     'execution_outcome',
-                    outcome='success',
+                    outcome=outcome,
                     exit_code=exit_code,
-                    duration_ms=duration_ms,
+                    duration_s=round(duration_s, 2),
                 )
                 ws.send(json.dumps({'type': 'exit', 'code': exit_code}))
         finally:
@@ -172,6 +180,8 @@ class PtyExecutionStrategy:
             pass
 
     def cleanup(self):
+        if self.container is not None:
+            active_sandboxes.dec()
         if self.tmpdir and os.path.exists(self.tmpdir):
             shutil.rmtree(self.tmpdir, ignore_errors=True)
         self.tmpdir = None
