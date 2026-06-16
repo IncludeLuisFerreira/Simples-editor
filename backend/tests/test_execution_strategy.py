@@ -10,12 +10,13 @@ class TestPtyExecutionStrategy:
     @patch('app.strategies.execution.shutil.rmtree')
     @patch('app.strategies.execution.shutil.copy')
     @patch('app.strategies.execution.os.chmod')
-    @patch('app.strategies.execution.tempfile.mkdtemp')
+    @patch('app.strategies.execution.os.makedirs')
+    @patch('app.strategies.execution.uuid4')
     @patch('app.strategies.execution.docker.from_env')
     def test_spawn_creates_tmpdir_and_container(
-        self, mock_docker, mock_mkdtemp, mock_chmod, mock_copy, mock_rmtree,
+        self, mock_docker, mock_uuid4, mock_makedirs, mock_chmod, mock_copy, mock_rmtree,
     ):
-        mock_mkdtemp.return_value = '/tmp/test-abc'
+        mock_uuid4.return_value.hex = 'testabc123'
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
         mock_container = MagicMock()
@@ -28,7 +29,7 @@ class TestPtyExecutionStrategy:
         with patch('app.strategies.execution.gevent.spawn') as mock_spawn:
             strategy.spawn(ws, binary_session_key='test_key')
 
-        mock_mkdtemp.assert_called_once()
+        mock_makedirs.assert_called_once()
         mock_client.containers.run.assert_called_once()
         _, kwargs = mock_client.containers.run.call_args
         assert kwargs['image'] == 'simples-runner:latest'
@@ -175,19 +176,21 @@ class TestExecutionStrategyIntegration:
     @patch('app.strategies.execution.shutil.rmtree')
     @patch('app.strategies.execution.shutil.copy')
     @patch('app.strategies.execution.os.chmod')
-    @patch('app.strategies.execution.tempfile.mkdtemp')
+    @patch('app.strategies.execution.os.makedirs')
+    @patch('app.strategies.execution.uuid4')
     @patch('app.strategies.execution.docker.from_env')
     def test_spawn_full_lifecycle(
         self,
         mock_docker,
-        mock_mkdtemp,
+        mock_uuid4,
+        mock_makedirs,
         mock_chmod,
         mock_copy,
         mock_rmtree,
         mock_spawn,
     ):
+        mock_uuid4.return_value.hex = 'testabc123'
         mock_spawn.side_effect = lambda fn, ws, socket: fn(ws, socket)
-        mock_mkdtemp.return_value = '/tmp/test-abc'
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
         mock_container = MagicMock()

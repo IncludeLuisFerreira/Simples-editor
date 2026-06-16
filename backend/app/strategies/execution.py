@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import tempfile
+from uuid import uuid4
 
 import docker
 import gevent
@@ -22,7 +23,8 @@ class PtyExecutionStrategy:
 
     def spawn(self, ws, binary_session_key):
         try:
-            self.tmpdir = tempfile.mkdtemp()
+            self.tmpdir = os.path.join('/tmp/simples', f'exec-{uuid4().hex}')
+            os.makedirs(self.tmpdir, exist_ok=True)
             binary_path = f'/tmp/simples/{binary_session_key}/programa'
             dest = os.path.join(self.tmpdir, 'prog')
             shutil.copy(binary_path, dest)
