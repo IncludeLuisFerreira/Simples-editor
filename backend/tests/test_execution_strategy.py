@@ -120,7 +120,7 @@ class TestPtyExecutionStrategy:
         strategy.container = mock_container
         strategy._stream_output(ws, mock_socket)
 
-        ws.send.assert_any_call(json.dumps({'type': 'timeout'}))
+        ws.send.assert_any_call(json.dumps({'type': 'timeout', 'limit_s': 10}))
 
     @patch('app.strategies.execution.shutil.rmtree')
     def test_terminate_sends_sigterm_then_sigkill(self, mock_rmtree):
