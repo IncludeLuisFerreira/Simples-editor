@@ -7,6 +7,7 @@ from app.strategies.execution import PtyExecutionStrategy
 
 
 class TestPtyExecutionStrategy:
+    @patch('app.strategies.execution.tarfile.open')
     @patch('app.strategies.execution.shutil.rmtree')
     @patch('app.strategies.execution.shutil.copy')
     @patch('app.strategies.execution.os.chmod')
@@ -14,7 +15,8 @@ class TestPtyExecutionStrategy:
     @patch('app.strategies.execution.uuid4')
     @patch('app.strategies.execution.docker.from_env')
     def test_spawn_creates_tmpdir_and_container(
-        self, mock_docker, mock_uuid4, mock_makedirs, mock_chmod, mock_copy, mock_rmtree,
+        self, mock_docker, mock_uuid4, mock_makedirs, mock_chmod, mock_copy,
+        mock_rmtree, mock_tarfile,
     ):
         mock_uuid4.return_value.hex = 'testabc123'
         mock_client = MagicMock()
@@ -39,28 +41,21 @@ class TestPtyExecutionStrategy:
         assert kwargs['network_mode'] == 'none'
 
     @patch('app.strategies.execution.gevent.spawn_later')
+    @patch('app.strategies.execution.gevent.event.Event')
     @patch('app.strategies.execution.shutil.rmtree')
-    @patch('app.strategies.execution.shutil.copy')
-    @patch('app.strategies.execution.os.chmod')
-    @patch('app.strategies.execution.tempfile.mkdtemp')
-    @patch('app.strategies.execution.docker.from_env')
     def test_spawn_streams_stdout_to_ws(
         self,
-        mock_docker,
-        mock_mkdtemp,
-        mock_chmod,
-        mock_copy,
         mock_rmtree,
+        mock_event,
         mock_spawn_later,
     ):
-        mock_mkdtemp.return_value = '/tmp/test-abc'
-        mock_client = MagicMock()
-        mock_docker.return_value = mock_client
-        mock_container = MagicMock()
-        mock_client.containers.run.return_value = mock_container
-        mock_socket = MagicMock()
-        mock_container.attach_socket.return_value = mock_socket
+        mock_event_instance = MagicMock()
+        mock_event_instance.is_set.return_value = False
+        mock_event.return_value = mock_event_instance
 
+        mock_container = MagicMock()
+        mock_container.wait.return_value = {'StatusCode': 0}
+        mock_socket = MagicMock()
         stdout_header = bytes([1, 0, 0, 0, 0, 0, 0, 6])
         stdout_payload = b'hello\n'
         mock_socket._sock.recv.side_effect = [
@@ -68,7 +63,6 @@ class TestPtyExecutionStrategy:
             stdout_payload,
             b'',
         ]
-        mock_container.wait.return_value = {'StatusCode': 0}
 
         ws = MagicMock()
         strategy = PtyExecutionStrategy()
@@ -78,29 +72,22 @@ class TestPtyExecutionStrategy:
         ws.send.assert_any_call(json.dumps({'type': 'output', 'data': 'hello\n'}))
 
     @patch('app.strategies.execution.gevent.spawn_later')
+    @patch('app.strategies.execution.gevent.event.Event')
     @patch('app.strategies.execution.shutil.rmtree')
-    @patch('app.strategies.execution.shutil.copy')
-    @patch('app.strategies.execution.os.chmod')
-    @patch('app.strategies.execution.tempfile.mkdtemp')
-    @patch('app.strategies.execution.docker.from_env')
     def test_spawn_captures_exit_code(
         self,
-        mock_docker,
-        mock_mkdtemp,
-        mock_chmod,
-        mock_copy,
         mock_rmtree,
+        mock_event,
         mock_spawn_later,
     ):
-        mock_mkdtemp.return_value = '/tmp/test-abc'
-        mock_client = MagicMock()
-        mock_docker.return_value = mock_client
+        mock_event_instance = MagicMock()
+        mock_event_instance.is_set.return_value = False
+        mock_event.return_value = mock_event_instance
+
         mock_container = MagicMock()
-        mock_client.containers.run.return_value = mock_container
-        mock_socket = MagicMock()
-        mock_container.attach_socket.return_value = mock_socket
-        mock_socket._sock.recv.side_effect = [b'']
         mock_container.wait.return_value = {'StatusCode': 42}
+        mock_socket = MagicMock()
+        mock_socket._sock.recv.side_effect = [b'']
 
         ws = MagicMock()
         strategy = PtyExecutionStrategy()
@@ -129,18 +116,8 @@ class TestPtyExecutionStrategy:
         ws.send.assert_any_call(json.dumps({'type': 'timeout'}))
 
     @patch('app.strategies.execution.shutil.rmtree')
-    @patch('app.strategies.execution.shutil.copy')
-    @patch('app.strategies.execution.os.chmod')
-    @patch('app.strategies.execution.tempfile.mkdtemp')
-    @patch('app.strategies.execution.docker.from_env')
-    def test_terminate_sends_sigterm_then_sigkill(
-        self, mock_docker, mock_mkdtemp, mock_chmod, mock_copy, mock_rmtree,
-    ):
-        mock_mkdtemp.return_value = '/tmp/test-abc'
-        mock_client = MagicMock()
-        mock_docker.return_value = mock_client
+    def test_terminate_sends_sigterm_then_sigkill(self, mock_rmtree):
         mock_container = MagicMock()
-        mock_client.containers.run.return_value = mock_container
 
         ws = MagicMock()
         strategy = PtyExecutionStrategy()
@@ -173,6 +150,7 @@ class TestPtyExecutionStrategy:
 
 class TestExecutionStrategyIntegration:
     @patch('app.strategies.execution.gevent.spawn')
+    @patch('app.strategies.execution.tarfile.open')
     @patch('app.strategies.execution.shutil.rmtree')
     @patch('app.strategies.execution.shutil.copy')
     @patch('app.strategies.execution.os.chmod')
@@ -187,6 +165,7 @@ class TestExecutionStrategyIntegration:
         mock_chmod,
         mock_copy,
         mock_rmtree,
+        mock_tarfile,
         mock_spawn,
     ):
         mock_uuid4.return_value.hex = 'testabc123'
