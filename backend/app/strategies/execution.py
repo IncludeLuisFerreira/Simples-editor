@@ -36,7 +36,6 @@ class PtyExecutionStrategy:
                 image=self.RUNNER_IMAGE,
                 command='./prog',
                 working_dir='/sandbox',
-                remove=True,
                 read_only=True,
                 network_mode='none',
                 mem_limit='64m',
@@ -44,8 +43,6 @@ class PtyExecutionStrategy:
                 user='65534:65534',
                 pids_limit=32,
                 stdin_open=True,
-                stdout=True,
-                stderr=True,
             )
 
             archive_data = io.BytesIO()
