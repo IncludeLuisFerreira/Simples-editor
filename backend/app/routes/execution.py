@@ -42,8 +42,12 @@ def handle_execution_ws(ws):
             elif msg_type == 'stop':
                 strategy.terminate(ws)
                 break
-    except Exception:
+    except Exception as exc:
         logger.exception('execution_ws_error', user_id=user_id)
+        try:
+            ws.send(json.dumps({'type': 'error', 'data': f'Execution failed: {exc}'}))
+        except Exception:
+            pass
     finally:
         strategy.cleanup()
         logger.info('execution_ws_disconnected', user_id=user_id)

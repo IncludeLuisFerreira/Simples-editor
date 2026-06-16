@@ -107,6 +107,8 @@ export function useExecution(): ExecutionContext {
       ws.onclose = (e) => {
         if (e.code === 4001) {
           dispatch({ type: 'ERROR', message: 'Authentication failed' })
+        } else if (!e.wasClean) {
+          dispatch({ type: 'ERROR', message: `Connection closed (${e.code})` })
         }
       }
     },
