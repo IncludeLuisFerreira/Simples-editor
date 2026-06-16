@@ -18,36 +18,43 @@ class PtyExecutionStrategy:
     def __init__(self):
         self.container = None
         self.tmpdir = None
+        self._stdin_socket = None
 
     def spawn(self, ws, binary_session_key):
-        self.tmpdir = tempfile.mkdtemp()
-        binary_path = f'/tmp/simples/{binary_session_key}/programa'
-        dest = os.path.join(self.tmpdir, 'prog')
-        shutil.copy(binary_path, dest)
-        os.chmod(dest, 0o755)
+        try:
+            self.tmpdir = tempfile.mkdtemp()
+            binary_path = f'/tmp/simples/{binary_session_key}/programa'
+            dest = os.path.join(self.tmpdir, 'prog')
+            shutil.copy(binary_path, dest)
+            os.chmod(dest, 0o755)
 
-        client = docker.from_env()
-        self.container = client.containers.run(
-            image=self.RUNNER_IMAGE,
-            command='./prog',
-            volumes={self.tmpdir: {'bind': '/sandbox', 'mode': 'ro'}},
-            working_dir='/sandbox',
-            remove=True,
-            read_only=True,
-            network_mode='none',
-            mem_limit='64m',
-            nano_cpus=500_000_000,
-            user='65534:65534',
-            pids_limit=32,
-            stop_timeout=2,
-            detach=True,
-            stdin_open=True,
-            stdout=True,
-            stderr=True,
-        )
+            client = docker.from_env()
+            self.container = client.containers.run(
+                image=self.RUNNER_IMAGE,
+                command='./prog',
+                volumes={self.tmpdir: {'bind': '/sandbox', 'mode': 'ro'}},
+                working_dir='/sandbox',
+                remove=True,
+                read_only=True,
+                network_mode='none',
+                mem_limit='64m',
+                nano_cpus=500_000_000,
+                user='65534:65534',
+                pids_limit=32,
+                stop_timeout=2,
+                detach=True,
+                stdin_open=True,
+                stdout=True,
+                stderr=True,
+            )
 
-        socket = self.container.attach_socket(params={'stdin': 1, 'stdout': 1, 'stderr': 1, 'stream': 1})
-        self._stream_output(ws, socket)
+            self._stdin_socket = self.container.attach_socket(params={'stdin': 1, 'stream': 1})
+            socket = self.container.attach_socket(params={'stdin': 1, 'stdout': 1, 'stderr': 1, 'stream': 1})
+            logger.info('execution_container_started', image=self.RUNNER_IMAGE, key=binary_session_key)
+            gevent.spawn(self._stream_output, ws, socket)
+        except Exception:
+            self.cleanup()
+            raise
 
     def _stream_output(self, ws, socket):
         timeout_event = gevent.event.Event()
@@ -57,7 +64,7 @@ class PtyExecutionStrategy:
             while not timeout_event.is_set():
                 try:
                     header = socket._sock.recv(8)
-                except Exception:
+                except (OSError, ConnectionError):
                     break
                 if not header or len(header) < 8:
                     break
@@ -80,7 +87,7 @@ class PtyExecutionStrategy:
             if timeout_event.is_set():
                 ws.send(json.dumps({'type': 'timeout'}))
                 self._force_kill()
-            else:
+            elif self.container is not None:
                 exit_code = self.container.wait()['StatusCode']
                 ws.send(json.dumps({'type': 'exit', 'code': exit_code}))
         finally:
@@ -88,10 +95,9 @@ class PtyExecutionStrategy:
             self.cleanup()
 
     def write(self, data):
-        if self.container is None:
+        if self._stdin_socket is None:
             return
-        socket = self.container.attach_socket(params={'stdin': 1, 'stream': 1})
-        socket._sock.send(data.encode('utf-8'))
+        self._stdin_socket._sock.send(data.encode('utf-8'))
 
     def terminate(self, ws):
         if self.container is None:
@@ -123,3 +129,4 @@ class PtyExecutionStrategy:
             shutil.rmtree(self.tmpdir, ignore_errors=True)
         self.tmpdir = None
         self.container = None
+        self._stdin_socket = None

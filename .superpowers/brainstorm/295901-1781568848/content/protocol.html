@@ -1,0 +1,102 @@
+<h2>Contrato WebSocket — Protocolo /ws/run</h2>
+<p class="subtitle">Formato das mensagens entre Frontend ↔ Backend</p>
+
+<div class="mockup">
+  <div class="mockup-header">Mensagens do Protocolo</div>
+  <div class="mockup-body">
+    <table style="width:100%;border-collapse:collapse;font-family:monospace;font-size:12px;">
+      <thead>
+        <tr style="background:#16213e;color:#00d4ff;">
+          <th style="padding:8px;text-align:left;">Direção</th>
+          <th style="padding:8px;text-align:left;">Tipo</th>
+          <th style="padding:8px;text-align:left;">Exemplo</th>
+          <th style="padding:8px;text-align:left;">Quando</th>
+        </tr>
+      </thead>
+      <tbody style="color:#ccc;">
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;color:#e94560;">FE → BE</td>
+          <td style="padding:8px;"><code>execute</code></td>
+          <td style="padding:8px;"><code>{"type":"execute"}</code></td>
+          <td style="padding:8px;font-size:11px;">Após WS connect, inicia execução</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;color:#e94560;">FE → BE</td>
+          <td style="padding:8px;"><code>input</code></td>
+          <td style="padding:8px;"><code>{"type":"input","data":"5\n"}</code></td>
+          <td style="padding:8px;font-size:11px;">Usuário digita no terminal</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;color:#e94560;">FE → BE</td>
+          <td style="padding:8px;"><code>stop</code></td>
+          <td style="padding:8px;"><code>{"type":"stop"}</code></td>
+          <td style="padding:8px;font-size:11px;">Usuário clica Stop</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;color:#00d4ff;">BE → FE</td>
+          <td style="padding:8px;"><code>output</code></td>
+          <td style="padding:8px;"><code>{"type":"output","data":"42\n"}</code></td>
+          <td style="padding:8px;font-size:11px;">stdout do container</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;color:#00d4ff;">BE → FE</td>
+          <td style="padding:8px;"><code>error</code></td>
+          <td style="padding:8px;"><code>{"type":"error","data":"Segmentation fault"}</code></td>
+          <td style="padding:8px;font-size:11px;">stderr ou erro de runtime</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1a1a2e;">
+          <td style="padding:8px;color:#00d4ff;">BE → FE</td>
+          <td style="padding:8px;"><code>exit</code></td>
+          <td style="padding:8px;"><code>{"type":"exit","code":0}</code></td>
+          <td style="padding:8px;font-size:11px;">Programa terminou (exit code)</td>
+        </tr>
+        <tr>
+          <td style="padding:8px;color:#00d4ff;">BE → FE</td>
+          <td style="padding:8px;"><code>timeout</code></td>
+          <td style="padding:8px;"><code>{"type":"timeout"}</code></td>
+          <td style="padding:8px;font-size:11px;">Timeout de 10s estourou</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Backend: State Machine</div>
+    <div class="mockup-body">
+      <div style="font-family:monospace;font-size:12px;color:#ccc;line-height:1.8;">
+        <div style="color:#888;"># /ws/run handler</div>
+        <div>ws = flask_sock.Sock(app)</div>
+        <div style="margin-top:8px;">on_connect → <span style="color:#00d4ff;">validate_jwt(token)</span></div>
+        <div>on_msg("execute") → <span style="color:#00d4ff;">spawn_container()</span></div>
+        <div>on_msg("input") → <span style="color:#00d4ff;">write_stdin(data)</span></div>
+        <div>on_msg("stop") → <span style="color:#e94560;">SIGTERM → 1s → SIGKILL</span></div>
+        <div style="margin-top:8px;">container_thread:</div>
+        <div>  loop: read stdout → ws.send("output")</div>
+        <div>  on_exit → ws.send("exit", code)</div>
+        <div style="margin-top:8px;">timeout_thread:</div>
+        <div>  sleep(10s) → ws.send("timeout") → kill</div>
+        <div>  docker --stop-timeout=2 (safety net)</div>
+      </div>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">Frontend: useReducer States</div>
+    <div class="mockup-body">
+      <div style="font-family:monospace;font-size:12px;color:#ccc;line-height:1.8;">
+        <div style="color:#888;">// useExecution.ts</div>
+        <div><span style="color:#888;">IDLE</span> → ws = null</div>
+        <div style="margin-top:4px;"><span style="color:#f0c000;">CONNECTING</span> → new WebSocket(</div>
+        <div>  "ws://host/ws/run?token="+jwt)</div>
+        <div style="margin-top:4px;"><span style="color:#00d4ff;">RUNNING</span> → ws.send("execute")</div>
+        <div>  terminal focus, botão muda p/ Stop</div>
+        <div style="margin-top:4px;"><span style="color:#e94560;">STOPPING</span> → ws.send("stop")</div>
+        <div>  aguarda msg "exit" ou "timeout"</div>
+        <div style="margin-top:4px;">→ <span style="color:#00d4ff;">FINISHED</span> (exit code 0)</div>
+        <div>→ <span style="color:#e94560;">ERROR</span> (exit != 0)</div>
+        <div>→ <span style="color:#e94560;">TIMEOUT</span> (10s)</div>
+      </div>
+    </div>
+  </div>
+</div>
