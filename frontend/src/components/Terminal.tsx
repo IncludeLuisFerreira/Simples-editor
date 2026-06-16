@@ -15,6 +15,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
   function Terminal({ onInput, onOutput }, ref) {
     const terminalRef = useRef<HTMLDivElement>(null)
     const xtermRef = useRef<XtermTerminal | null>(null)
+    const bufferRef = useRef('')
 
     useImperativeHandle(ref, () => ({
       focus: () => xtermRef.current?.focus(),
@@ -34,9 +35,9 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
       term.open(terminalRef.current)
       xtermRef.current = term
 
-      term.writeln('\x1b[1;36m╭─── Simples Terminal ═══════════════════╮\x1b[0m')
-      term.writeln('\x1b[1;36m│\x1b[0m  Compile seu código e clique Run       \x1b[1;36m│\x1b[0m')
-      term.writeln('\x1b[1;36m╰──────────────────────────────────────────╯\x1b[0m')
+      term.writeln('\x1b[1;36m\u250c\u2500\u2500\u2500 Simples Terminal \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2510\x1b[0m')
+      term.writeln('\x1b[1;36m\u2502\x1b[0m  Compile e clique Run para executar        \x1b[1;36m\u2502\x1b[0m')
+      term.writeln('\x1b[1;36m\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\x1b[0m')
       term.writeln('')
 
       onOutput((data: string) => {
@@ -53,9 +54,21 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
       if (!term) return
 
       const disposable = term.onData((data) => {
-        const normalized = data.replace(/\r\n?/g, '\n')
+        if (data === '\r') {
+          term.write('\r\n')
+          onInput(bufferRef.current + '\n')
+          bufferRef.current = ''
+          return
+        }
+        if (data === '\x7f' || data === '\b') {
+          if (bufferRef.current.length > 0) {
+            bufferRef.current = bufferRef.current.slice(0, -1)
+            term.write('\b \b')
+          }
+          return
+        }
+        bufferRef.current += data
         term.write(data)
-        onInput(normalized)
       })
 
       return () => {
