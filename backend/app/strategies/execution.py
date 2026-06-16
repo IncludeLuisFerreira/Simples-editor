@@ -1,8 +1,6 @@
-import io
 import json
 import os
 import shutil
-import tarfile
 from uuid import uuid4
 
 import docker
@@ -31,10 +29,16 @@ class PtyExecutionStrategy:
             shutil.copy(binary_path, dest)
             os.chmod(dest, 0o755)
 
+            binary_size = os.path.getsize(dest)
+            command = (
+                f'sh -c "head -c {binary_size} > /tmp/prog && '
+                f'chmod +x /tmp/prog && /tmp/prog"'
+            )
+
             client = docker.from_env()
             self.container = client.containers.create(
                 image=self.RUNNER_IMAGE,
-                command='./prog',
+                command=command,
                 working_dir='/sandbox',
                 read_only=True,
                 network_mode='none',
@@ -43,13 +47,8 @@ class PtyExecutionStrategy:
                 user='65534:65534',
                 pids_limit=32,
                 stdin_open=True,
+                tmpfs={'/tmp': 'size=64m,mode=1777'},
             )
-
-            archive_data = io.BytesIO()
-            with tarfile.open(fileobj=archive_data, mode='w') as tar:
-                tar.add(dest, arcname='prog')
-            archive_data.seek(0)
-            self.container.put_archive('/sandbox', archive_data.read())
 
             self.container.start()
 
@@ -57,10 +56,16 @@ class PtyExecutionStrategy:
                 params={'stdin': 1, 'stream': 1})
             socket = self.container.attach_socket(
                 params={'stdin': 1, 'stdout': 1, 'stderr': 1, 'stream': 1})
+
+            with open(dest, 'rb') as f:
+                binary_data = f.read()
+            socket._sock.send(binary_data)
+
             logger.info(
                 'execution_container_started',
                 image=self.RUNNER_IMAGE,
                 key=binary_session_key,
+                size=binary_size,
             )
             gevent.spawn(self._stream_output, ws, socket)
         except Exception:

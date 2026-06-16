@@ -7,18 +7,19 @@ from app.strategies.execution import PtyExecutionStrategy
 
 
 class TestPtyExecutionStrategy:
-    @patch('app.strategies.execution.tarfile.open')
     @patch('app.strategies.execution.shutil.rmtree')
     @patch('app.strategies.execution.shutil.copy')
     @patch('app.strategies.execution.os.chmod')
+    @patch('app.strategies.execution.os.path.getsize')
     @patch('app.strategies.execution.os.makedirs')
     @patch('app.strategies.execution.uuid4')
     @patch('app.strategies.execution.docker.from_env')
     def test_spawn_creates_tmpdir_and_container(
-        self, mock_docker, mock_uuid4, mock_makedirs, mock_chmod, mock_copy,
-        mock_rmtree, mock_tarfile,
+        self, mock_docker, mock_uuid4, mock_makedirs, mock_getsize,
+        mock_chmod, mock_copy, mock_rmtree,
     ):
         mock_uuid4.return_value.hex = 'testabc123'
+        mock_getsize.return_value = 128
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
         mock_container = MagicMock()
@@ -28,17 +29,18 @@ class TestPtyExecutionStrategy:
 
         ws = MagicMock()
         strategy = PtyExecutionStrategy()
-        with patch('app.strategies.execution.gevent.spawn') as mock_spawn:
+        with patch('app.strategies.execution.gevent.spawn') as mock_spawn, \
+             patch('builtins.open', create=True):
             strategy.spawn(ws, binary_session_key='test_key')
 
         mock_makedirs.assert_called_once()
         mock_client.containers.create.assert_called_once()
-        mock_container.put_archive.assert_called_once()
         mock_container.start.assert_called_once()
         _, kwargs = mock_client.containers.create.call_args
         assert kwargs['image'] == 'simples-runner:latest'
         assert kwargs['read_only'] is True
         assert kwargs['network_mode'] == 'none'
+        assert 'tmpfs' in kwargs
 
     @patch('app.strategies.execution.gevent.spawn_later')
     @patch('app.strategies.execution.gevent.event.Event')
@@ -150,10 +152,10 @@ class TestPtyExecutionStrategy:
 
 class TestExecutionStrategyIntegration:
     @patch('app.strategies.execution.gevent.spawn')
-    @patch('app.strategies.execution.tarfile.open')
     @patch('app.strategies.execution.shutil.rmtree')
     @patch('app.strategies.execution.shutil.copy')
     @patch('app.strategies.execution.os.chmod')
+    @patch('app.strategies.execution.os.path.getsize')
     @patch('app.strategies.execution.os.makedirs')
     @patch('app.strategies.execution.uuid4')
     @patch('app.strategies.execution.docker.from_env')
@@ -162,13 +164,14 @@ class TestExecutionStrategyIntegration:
         mock_docker,
         mock_uuid4,
         mock_makedirs,
+        mock_getsize,
         mock_chmod,
         mock_copy,
         mock_rmtree,
-        mock_tarfile,
         mock_spawn,
     ):
         mock_uuid4.return_value.hex = 'testabc123'
+        mock_getsize.return_value = 128
         mock_spawn.side_effect = lambda fn, ws, socket: fn(ws, socket)
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
@@ -184,7 +187,8 @@ class TestExecutionStrategyIntegration:
 
         ws = MagicMock()
         strategy = PtyExecutionStrategy()
-        strategy.spawn(ws, binary_session_key='test_key')
+        with patch('builtins.open', create=True):
+            strategy.spawn(ws, binary_session_key='test_key')
 
         sent_messages = [json.loads(call[0][0]) for call in ws.send.call_args_list]
         types = [m['type'] for m in sent_messages]
