@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom'
 
 vi.mock('@monaco-editor/react', () => ({
-  default: ({ value, onChange, ...props }: any) => {
-    const { height, language, theme, options, ...rest } = props
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  default: ({ value, onChange, ...props }: Record<string, any>) => {
+    const { options, ...rest } = props
     return (
       <textarea
         data-testid="monaco-editor"
@@ -30,8 +31,10 @@ vi.mock('@xterm/xterm', () => {
 })
 
 vi.mock('react-resizable-panels', () => ({
-  Panel: ({ children }: any) => <div>{children}</div>,
-  Group: ({ children }: any) => <div>{children}</div>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Panel: ({ children }: Record<string, any>) => <div>{children}</div>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Group: ({ children }: Record<string, any>) => <div>{children}</div>,
   Separator: () => <div />,
 }))
 

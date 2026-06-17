@@ -23,6 +23,7 @@ describe('AuthGuard', () => {
   })
 
   it('renders children when user is authenticated', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockAuth = { user: { id: '123' } as any, loading: false }
     render(<AuthGuard><div>conteudo secreto</div></AuthGuard>)
     expect(screen.getByText('conteudo secreto')).toBeInTheDocument()
