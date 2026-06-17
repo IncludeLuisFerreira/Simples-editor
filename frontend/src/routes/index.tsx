@@ -152,7 +152,7 @@ function Index() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <div className="flex items-center gap-3 px-4 py-2 bg-[#24283b] border-b border-[#292e42]">
+      <div className="flex items-center gap-3 px-4 py-2 bg-[#1a1b26] border-b border-[#292e42]">
         <button
           onClick={handleRun}
           disabled={
