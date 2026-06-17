@@ -9,6 +9,15 @@ export const Route = createFileRoute('/login')({
   component: Login,
 })
 
+const particles = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  left: `${(i * 17 + 3) % 100}%`,
+  size: 2 + (i % 4),
+  delay: `${(i * 0.7) % 6}s`,
+  duration: `${8 + (i % 8)}s`,
+  color: ['#7aa2f7', '#bb9af7', '#c0caf5', '#89ddff'][i % 4],
+}))
+
 function Login() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -18,8 +27,27 @@ function Login() {
   }, [user, navigate])
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen bg-[#1a1b26] overflow-hidden flex items-center justify-center">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(122,162,247,0.06),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(187,154,247,0.04),transparent_50%)]" />
+
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            left: p.left,
+            bottom: '-10px',
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            backgroundColor: p.color,
+            animation: `floatUp ${p.duration} ${p.delay} infinite ease-out`,
+            opacity: 0,
+          }}
+        />
+      ))}
+
+      <div className="w-full max-w-md relative z-10">
         <h2 className="text-2xl font-semibold text-center mb-6 text-[#c0caf5]">
           Entrar no Simples Editor
         </h2>
