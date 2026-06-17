@@ -106,17 +106,6 @@ function Login() {
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(122,162,247,0.06),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(187,154,247,0.04),transparent_50%)]" />
-      <div
-        className="absolute pointer-events-none z-0"
-        style={{
-          left: 0,
-          top: 0,
-          width: '100%',
-          height: '100%',
-          background: `radial-gradient(150px circle at ${mouse.x}px ${mouse.y}px, rgba(122,162,247,0.03), transparent 40%)`,
-          transition: 'opacity 0.3s',
-        }}
-      />
 
       {particles.slice(0, 12).map((p) => {
         const pctLeft = parseFloat(p.left) / 100
