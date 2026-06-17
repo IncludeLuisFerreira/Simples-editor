@@ -12,6 +12,8 @@ export interface TerminalHandle {
   clear: () => void
 }
 
+const MARGIN = '      '
+
 function writeBanner(term: XtermTerminal) {
   const c = '\x1b[1;36m'
   const r = '\x1b[0m'
@@ -25,13 +27,14 @@ function writeBanner(term: XtermTerminal) {
   const pad2 = w - (indent + text2).length
 
   term.writeln('')
-  term.writeln(`  ${c}\u250c${border}\u2510${r}`)
+  term.writeln(`${MARGIN}${c}\u250c${border}\u2510${r}`)
   term.writeln(
-    `  ${c}\u2502${r}${indent}\x1b[1;37m${text1}\x1b[0m${' '.repeat(pad1)}${c}\u2502${r}`,
+    `${MARGIN}${c}\u2502${r}${indent}\x1b[1;37m${text1}\x1b[0m${' '.repeat(pad1)}${c}\u2502${r}`,
   )
-  term.writeln(`  ${c}\u2502${r}${indent}${text2}${' '.repeat(pad2)}${c}\u2502${r}`)
-  term.writeln(`  ${c}\u2514${border}\u2518${r}`)
+  term.writeln(`${MARGIN}${c}\u2502${r}${indent}${text2}${' '.repeat(pad2)}${c}\u2502${r}`)
+  term.writeln(`${MARGIN}${c}\u2514${border}\u2518${r}`)
   term.writeln('')
+  term.write(MARGIN)
 }
 
 export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
@@ -87,6 +90,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
         term.write('\r\n')
         onInput(bufferRef.current + '\n')
         bufferRef.current = ''
+        term.write(MARGIN)
         return
       }
       if (data === '\x7f' || data === '\b') {
