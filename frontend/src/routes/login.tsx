@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { supabase } from '../lib/supabase'
-import { useEffect, useState, useCallback, type FormEvent, type MouseEvent } from 'react'
+import { useEffect, useState, useCallback, useRef, type FormEvent } from 'react'
 import { useAuth } from '../lib/auth'
 
 export const Route = createFileRoute('/login')({
@@ -39,15 +39,43 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [mouse, setMouse] = useState({ x: 0.5, y: 0.5 })
+  const [mouse, setMouse] = useState({ x: -1000, y: -1000 })
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerSize, setContainerSize] = useState({ w: window.innerWidth, h: window.innerHeight })
 
-  const handleMouseMove = useCallback((e: MouseEvent<HTMLDivElement>) => {
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height })
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     setMouse({
-      x: (e.clientX - rect.left) / rect.width,
-      y: (e.clientY - rect.top) / rect.height,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     })
   }, [])
+
+  function getPull(
+    px: number,
+    py: number,
+    mx: number,
+    my: number,
+    maxPull: number,
+  ): [number, number] {
+    const dx = mx - px
+    const dy = my - py
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    const radius = 220
+    if (dist >= radius) return [0, 0]
+    const strength = (1 - dist / radius) * maxPull
+    return [(dx / dist) * strength, (dy / dist) * strength]
+  }
 
   useEffect(() => {
     if (user) navigate({ to: '/' })
@@ -69,87 +97,136 @@ function Login() {
 
   return (
     <div
+      ref={containerRef}
       className="relative min-h-screen bg-[#1a1b26] overflow-hidden flex items-center justify-center"
       onMouseMove={handleMouseMove}
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(122,162,247,0.06),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(187,154,247,0.04),transparent_50%)]" />
 
-      {particles.slice(0, 12).map((p, i) => (
-        <div
-          key={p.id}
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            left: p.left,
-            bottom: '-10px',
-            width: `${p.size}px`,
-            height: `${p.size}px`,
-            transform: `translate(${(mouse.x - 0.5) * (10 + i * 2)}px, ${(mouse.y - 0.5) * (8 + i * 2)}px)`,
-            transition: 'transform 0.6s ease-out',
-          }}
-        >
+      {particles.slice(0, 12).map((p) => {
+        const pctLeft = parseFloat(p.left) / 100
+        const w = containerSize.w
+        const h = containerSize.h
+        const px = pctLeft * w
+        const py = h * 0.5
+        const [ox, oy] = getPull(px, py, mouse.x, mouse.y, 18)
+        return (
           <div
-            className="w-full h-full rounded-full"
+            key={p.id}
+            className="absolute pointer-events-none"
             style={{
-              backgroundColor: p.color,
-              animation: `floatUp ${p.duration} ${p.delay} infinite ease-out`,
-              opacity: 0,
+              left: p.left,
+              bottom: '-10px',
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              transform: `translate(${ox}px, ${oy}px)`,
+              transition: 'transform 0.5s ease-out',
             }}
-          />
-        </div>
-      ))}
-      {particles.slice(12).map((p, i) => (
-        <div
-          key={p.id}
-          className="absolute rounded-full pointer-events-none hidden sm:block"
-          style={{
-            left: p.left,
-            bottom: '-10px',
-            width: `${p.size}px`,
-            height: `${p.size}px`,
-            transform: `translate(${(mouse.x - 0.5) * (10 + i * 2)}px, ${(mouse.y - 0.5) * (8 + i * 2)}px)`,
-            transition: 'transform 0.6s ease-out',
-          }}
-        >
+          >
+            <div
+              className="w-full h-full rounded-full"
+              style={{
+                backgroundColor: p.color,
+                animation: `floatUp ${p.duration} ${p.delay} infinite ease-out`,
+                opacity: 0,
+              }}
+            />
+          </div>
+        )
+      })}
+      {particles.slice(12).map((p) => {
+        const pctLeft = parseFloat(p.left) / 100
+        const w = containerSize.w
+        const h = containerSize.h
+        const px = pctLeft * w
+        const py = h * 0.5
+        const [ox, oy] = getPull(px, py, mouse.x, mouse.y, 18)
+        return (
           <div
-            className="w-full h-full rounded-full"
+            key={p.id}
+            className="absolute pointer-events-none hidden sm:block"
             style={{
-              backgroundColor: p.color,
-              animation: `floatUp ${p.duration} ${p.delay} infinite ease-out`,
-              opacity: 0,
+              left: p.left,
+              bottom: '-10px',
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              transform: `translate(${ox}px, ${oy}px)`,
+              transition: 'transform 0.5s ease-out',
             }}
-          />
-        </div>
-      ))}
+          >
+            <div
+              className="w-full h-full rounded-full"
+              style={{
+                backgroundColor: p.color,
+                animation: `floatUp ${p.duration} ${p.delay} infinite ease-out`,
+                opacity: 0,
+              }}
+            />
+          </div>
+        )
+      })}
 
-      {codeFragments.slice(0, 8).map((f, i) => (
-        <span
-          key={f.id}
-          className={`absolute font-mono text-[#c0caf5]/30 pointer-events-none select-none ${f.size}`}
-          style={{
-            left: `calc(${f.left} + ${(mouse.x - 0.5) * (20 + i * 4)}px)`,
-            bottom: `calc(-40px + ${(mouse.y - 0.5) * (15 + i * 3)}px)`,
-            animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
-            opacity: 0,
-          }}
-        >
-          {f.text}
-        </span>
-      ))}
-      {codeFragments.slice(8).map((f, i) => (
-        <span
-          key={f.id}
-          className={`absolute font-mono text-[#c0caf5]/30 pointer-events-none select-none hidden sm:block ${f.size}`}
-          style={{
-            left: `calc(${f.left} + ${(mouse.x - 0.5) * (20 + i * 4)}px)`,
-            bottom: `calc(-40px + ${(mouse.y - 0.5) * (15 + i * 3)}px)`,
-            animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
-            opacity: 0,
-          }}
-        >
-          {f.text}
-        </span>
-      ))}
+      {codeFragments.slice(0, 8).map((f) => {
+        const pctLeft = parseFloat(f.left) / 100
+        const w = containerSize.w
+        const h = containerSize.h
+        const px = pctLeft * w
+        const py = h * 0.4
+        const [ox, oy] = getPull(px, py, mouse.x, mouse.y, 25)
+        return (
+          <div
+            key={f.id}
+            className="absolute pointer-events-none"
+            style={{
+              left: f.left,
+              bottom: '-40px',
+              transform: `translate(${ox}px, ${oy}px)`,
+              transition: 'transform 0.5s ease-out',
+            }}
+          >
+            <span
+              className={`block font-mono text-[#c0caf5]/30 select-none ${f.size}`}
+              style={{
+                animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
+                opacity: 0,
+              }}
+            >
+              {f.text}
+            </span>
+          </div>
+        )
+      })}
+      {codeFragments.slice(8).map((f) => {
+        const pctLeft = parseFloat(f.left) / 100
+        const w = containerSize.w
+        const h = containerSize.h
+        const px = pctLeft * w
+        const py = h * 0.4
+        const [ox, oy] = getPull(px, py, mouse.x, mouse.y, 25)
+        return (
+          <div
+            key={f.id}
+            className="absolute pointer-events-none hidden sm:block"
+            style={{
+              left: f.left,
+              bottom: '-40px',
+              transform: `translate(${ox}px, ${oy}px)`,
+              transition: 'transform 0.5s ease-out',
+            }}
+          >
+            <span
+              className={`block font-mono text-[#c0caf5]/30 select-none ${f.size}`}
+              style={{
+                animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
+                opacity: 0,
+              }}
+            >
+              {f.text}
+            </span>
+          </div>
+        )
+      })}
 
       <div className="relative z-10 w-full max-w-md mx-4 animate-[slideUpFade_0.6s_ease-out]">
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#7aa2f7] to-transparent rounded-full" />
