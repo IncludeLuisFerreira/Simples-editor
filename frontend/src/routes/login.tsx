@@ -16,6 +16,21 @@ const particles = Array.from({ length: 20 }, (_, i) => ({
   color: ['#7aa2f7', '#bb9af7', '#c0caf5', '#89ddff'][i % 4],
 }))
 
+const codeFragments = [
+  { id: 'f1', text: 'se', left: '8%', delay: '1s', duration: '18s', size: 'text-2xl' },
+  { id: 'f2', text: 'enquanto', left: '85%', delay: '4s', duration: '20s', size: 'text-xl' },
+  { id: 'f3', text: '<-', left: '22%', delay: '7s', duration: '22s', size: 'text-3xl' },
+  { id: 'f4', text: 'escreva', left: '72%', delay: '2s', duration: '19s', size: 'text-lg' },
+  { id: 'f5', text: ':=', left: '45%', delay: '9s', duration: '24s', size: 'text-2xl' },
+  { id: 'f6', text: 'fim', left: '60%', delay: '5s', duration: '16s', size: 'text-xl' },
+  { id: 'f7', text: 'repita', left: '35%', delay: '3s', duration: '21s', size: 'text-lg' },
+  { id: 'f8', text: '->', left: '90%', delay: '6s', duration: '17s', size: 'text-3xl' },
+  { id: 'f9', text: 'leia', left: '15%', delay: '8s', duration: '23s', size: 'text-xl' },
+  { id: 'f10', text: '()', left: '55%', delay: '0s', duration: '15s', size: 'text-2xl' },
+  { id: 'f11', text: 'verdadeiro', left: '78%', delay: '10s', duration: '25s', size: 'text-sm' },
+  { id: 'f12', text: ';', left: '5%', delay: '5.5s', duration: '20s', size: 'text-4xl' },
+]
+
 function Login() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -62,6 +77,21 @@ function Login() {
             opacity: 0,
           }}
         />
+      ))}
+
+      {codeFragments.map((f) => (
+        <span
+          key={f.id}
+          className={`absolute font-mono text-[#c0caf5]/5 pointer-events-none select-none ${f.size}`}
+          style={{
+            left: f.left,
+            bottom: '-40px',
+            animation: `floatUp ${f.duration} ${f.delay} infinite ease-out`,
+            opacity: 0,
+          }}
+        >
+          {f.text}
+        </span>
       ))}
 
       <div className="relative z-10 w-full max-w-md mx-4 animate-[slideUpFade_0.6s_ease-out]">
