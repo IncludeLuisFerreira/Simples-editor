@@ -26,7 +26,9 @@ function writeBanner(term: XtermTerminal) {
 
   term.writeln('')
   term.writeln(`  ${c}\u250c${border}\u2510${r}`)
-  term.writeln(`  ${c}\u2502${r}${indent}\x1b[1;37m${text1}\x1b[0m${' '.repeat(pad1)}${c}\u2502${r}`)
+  term.writeln(
+    `  ${c}\u2502${r}${indent}\x1b[1;37m${text1}\x1b[0m${' '.repeat(pad1)}${c}\u2502${r}`,
+  )
   term.writeln(`  ${c}\u2502${r}${indent}${text2}${' '.repeat(pad2)}${c}\u2502${r}`)
   term.writeln(`  ${c}\u2514${border}\u2518${r}`)
   term.writeln('')
