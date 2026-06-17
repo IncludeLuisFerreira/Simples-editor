@@ -63,7 +63,7 @@ function Login() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(122,162,247,0.06),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(187,154,247,0.04),transparent_50%)]" />
 
-      {particles.map((p) => (
+      {particles.slice(0, 12).map((p) => (
         <div
           key={p.id}
           className="absolute rounded-full pointer-events-none"
@@ -78,11 +78,40 @@ function Login() {
           }}
         />
       ))}
+      {particles.slice(12).map((p) => (
+        <div
+          key={p.id}
+          className="absolute rounded-full pointer-events-none hidden sm:block"
+          style={{
+            left: p.left,
+            bottom: '-10px',
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            backgroundColor: p.color,
+            animation: `floatUp ${p.duration} ${p.delay} infinite ease-out`,
+            opacity: 0,
+          }}
+        />
+      ))}
 
-      {codeFragments.map((f) => (
+      {codeFragments.slice(0, 8).map((f) => (
         <span
           key={f.id}
           className={`absolute font-mono text-[#c0caf5]/30 pointer-events-none select-none ${f.size}`}
+          style={{
+            left: f.left,
+            bottom: '-40px',
+            animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
+            opacity: 0,
+          }}
+        >
+          {f.text}
+        </span>
+      ))}
+      {codeFragments.slice(8).map((f) => (
+        <span
+          key={f.id}
+          className={`absolute font-mono text-[#c0caf5]/30 pointer-events-none select-none hidden sm:block ${f.size}`}
           style={{
             left: f.left,
             bottom: '-40px',
@@ -129,7 +158,7 @@ function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
                 required
-                className="w-full bg-[#1a1b26] border border-[#3b4261] rounded-lg text-[#c0caf5] text-sm px-4 py-3 placeholder-[#565f89] focus:outline-none focus:ring-2 focus:ring-[#7aa2f7]/30 focus:border-[#7aa2f7] transition-all"
+                className="w-full bg-[#1a1b26] border border-[#3b4261] rounded-lg text-[#c0caf5] text-base sm:text-sm px-4 py-3 placeholder-[#565f89] focus:outline-none focus:ring-2 focus:ring-[#7aa2f7]/30 focus:border-[#7aa2f7] transition-all"
               />
             </div>
             <div>
@@ -143,7 +172,7 @@ function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-[#1a1b26] border border-[#3b4261] rounded-lg text-[#c0caf5] text-sm px-4 py-3 pr-10 placeholder-[#565f89] focus:outline-none focus:ring-2 focus:ring-[#7aa2f7]/30 focus:border-[#7aa2f7] transition-all"
+                  className="w-full bg-[#1a1b26] border border-[#3b4261] rounded-lg text-[#c0caf5] text-base sm:text-sm px-4 py-3 pr-10 placeholder-[#565f89] focus:outline-none focus:ring-2 focus:ring-[#7aa2f7]/30 focus:border-[#7aa2f7] transition-all"
                 />
                 <button
                   type="button"
