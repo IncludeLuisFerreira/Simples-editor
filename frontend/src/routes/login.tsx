@@ -113,7 +113,7 @@ function Login() {
           top: 0,
           width: '100%',
           height: '100%',
-          background: `radial-gradient(200px circle at ${mouse.x}px ${mouse.y}px, rgba(122,162,247,0.05), rgba(187,154,247,0.02), transparent 50%)`,
+          background: `radial-gradient(150px circle at ${mouse.x}px ${mouse.y}px, rgba(122,162,247,0.03), transparent 40%)`,
           transition: 'opacity 0.3s',
         }}
       />
