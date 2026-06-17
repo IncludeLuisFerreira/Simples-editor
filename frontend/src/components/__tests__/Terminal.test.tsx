@@ -62,16 +62,12 @@ describe('Terminal', () => {
 
   it('renders without crashing', () => {
     const ref = createRef<TerminalHandle>()
-    const { container } = render(
-      <Terminal ref={ref} onInput={() => {}} onOutput={vi.fn()} />,
-    )
+    const { container } = render(<Terminal ref={ref} onInput={() => {}} onOutput={vi.fn()} />)
     expect(container).toBeInTheDocument()
   })
 
   it('opens xterm in container element', () => {
-    const { container } = render(
-      <Terminal onInput={() => {}} onOutput={vi.fn()} />,
-    )
+    const { container } = render(<Terminal onInput={() => {}} onOutput={vi.fn()} />)
     const terminalDiv = container.querySelector('div')
     expect(terminalDiv).toBeInTheDocument()
     expect(mocks.instanceOpen).toHaveBeenCalledWith(terminalDiv)
@@ -94,8 +90,8 @@ describe('Terminal', () => {
     })
 
     expect(mocks.instanceWrite).toHaveBeenCalledWith('\x1b[2J\x1b[H')
-    const bannerCall = mocks.instanceWriteln.mock.calls.find((call: string[]) =>
-      typeof call[0] === 'string' && call[0].includes('SIMPLES TERMINAL'),
+    const bannerCall = mocks.instanceWriteln.mock.calls.find(
+      (call: string[]) => typeof call[0] === 'string' && call[0].includes('SIMPLES TERMINAL'),
     )
     expect(bannerCall).toBeDefined()
   })
@@ -149,17 +145,13 @@ describe('Terminal', () => {
   })
 
   it('disposes terminal on unmount', () => {
-    const { unmount } = render(
-      <Terminal onInput={() => {}} onOutput={vi.fn()} />,
-    )
+    const { unmount } = render(<Terminal onInput={() => {}} onOutput={vi.fn()} />)
     unmount()
     expect(mocks.instanceDispose).toHaveBeenCalled()
   })
 
   it('disposes onData subscription on unmount', () => {
-    const { unmount } = render(
-      <Terminal onInput={() => {}} onOutput={vi.fn()} />,
-    )
+    const { unmount } = render(<Terminal onInput={() => {}} onOutput={vi.fn()} />)
     unmount()
     expect(mocks.capturedDisposable.get()!.dispose).toHaveBeenCalled()
   })

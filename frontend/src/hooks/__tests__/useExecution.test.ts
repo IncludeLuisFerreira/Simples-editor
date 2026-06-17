@@ -73,9 +73,7 @@ describe('useExecution', () => {
     act(() => {
       result.current.execute('binary_key')
     })
-    expect(window.WebSocket).toHaveBeenCalledWith(
-      expect.stringContaining('token=test-token'),
-    )
+    expect(window.WebSocket).toHaveBeenCalledWith(expect.stringContaining('token=test-token'))
   })
 
   it('sends execute message after connect', () => {
@@ -118,7 +116,9 @@ describe('useExecution', () => {
     connectAndRun(result)
 
     act(() => {
-      wsInstance!.onmessage!({ data: JSON.stringify({ type: 'error', data: 'segmentation fault' }) })
+      wsInstance!.onmessage!({
+        data: JSON.stringify({ type: 'error', data: 'segmentation fault' }),
+      })
     })
     expect(onOutput).toHaveBeenCalledWith('\x1b[31msegmentation fault\x1b[0m')
   })

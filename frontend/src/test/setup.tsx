@@ -9,10 +9,12 @@ vi.mock('@monaco-editor/react', () => ({
         data-testid="monaco-editor"
         value={(value as string) ?? ''}
         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-          (onChange as ((v: string) => void))?.(e.target.value)
+          (onChange as (v: string) => void)?.(e.target.value)
         }
         readOnly={
-          ((options as Record<string, unknown>)?.readOnly as boolean) ?? (readOnly as boolean) ?? false
+          ((options as Record<string, unknown>)?.readOnly as boolean) ??
+          (readOnly as boolean) ??
+          false
         }
       />
     )
