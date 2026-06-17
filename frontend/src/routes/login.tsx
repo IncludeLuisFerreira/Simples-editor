@@ -1,8 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '../lib/supabase'
-import { useEffect } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../lib/auth'
 
 export const Route = createFileRoute('/login')({
@@ -21,10 +19,29 @@ const particles = Array.from({ length: 20 }, (_, i) => ({
 function Login() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (user) navigate({ to: '/' })
   }, [user, navigate])
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (authError) {
+      setError(authError.message)
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="relative min-h-screen bg-[#1a1b26] overflow-hidden flex items-center justify-center">
@@ -71,13 +88,95 @@ function Login() {
             </p>
           </div>
           <hr className="border-[#292e42] mb-6" />
-          <Auth
-            supabaseClient={supabase}
-            appearance={{ theme: ThemeSupa }}
-            theme="dark"
-            providers={[]}
-            redirectTo={window.location.origin}
-          />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs uppercase tracking-wide text-[#a9b1d6] mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.com"
+                required
+                className="w-full bg-[#1a1b26] border border-[#3b4261] rounded-lg text-[#c0caf5] text-sm px-4 py-3 placeholder-[#565f89] focus:outline-none focus:ring-2 focus:ring-[#7aa2f7]/30 focus:border-[#7aa2f7] transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wide text-[#a9b1d6] mb-1">
+                Senha
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full bg-[#1a1b26] border border-[#3b4261] rounded-lg text-[#c0caf5] text-sm px-4 py-3 pr-10 placeholder-[#565f89] focus:outline-none focus:ring-2 focus:ring-[#7aa2f7]/30 focus:border-[#7aa2f7] transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#565f89] hover:text-[#a9b1d6] transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+            {error && (
+              <div className="flex items-center gap-2 text-[#f7768e] text-sm bg-[#f7768e]/10 border border-[#f7768e]/20 rounded-lg px-3 py-2">
+                <span>⚠</span>
+                <span>{error}</span>
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#7aa2f7] hover:bg-[#89b4fa] text-[#1a1b26] font-semibold py-3 rounded-lg transition-all hover:shadow-lg hover:shadow-[#7aa2f7]/20 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="animate-spin h-4 w-4 border-2 border-[#1a1b26] border-t-transparent rounded-full" />
+                  Entrando...
+                </span>
+              ) : (
+                'Entrar'
+              )}
+            </button>
+          </form>
         </div>
       </div>
     </div>
