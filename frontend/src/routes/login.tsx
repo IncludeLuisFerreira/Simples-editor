@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { supabase } from '../lib/supabase'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, useCallback, type FormEvent, type MouseEvent } from 'react'
 import { useAuth } from '../lib/auth'
 
 export const Route = createFileRoute('/login')({
@@ -39,6 +39,15 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [mouse, setMouse] = useState({ x: 0.5, y: 0.5 })
+
+  const handleMouseMove = useCallback((e: MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setMouse({
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top) / rect.height,
+    })
+  }, [])
 
   useEffect(() => {
     if (user) navigate({ to: '/' })
@@ -59,11 +68,14 @@ function Login() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#1a1b26] overflow-hidden flex items-center justify-center">
+    <div
+      className="relative min-h-screen bg-[#1a1b26] overflow-hidden flex items-center justify-center"
+      onMouseMove={handleMouseMove}
+    >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(122,162,247,0.06),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(187,154,247,0.04),transparent_50%)]" />
 
-      {particles.slice(0, 12).map((p) => (
+      {particles.slice(0, 12).map((p, i) => (
         <div
           key={p.id}
           className="absolute rounded-full pointer-events-none"
@@ -72,13 +84,21 @@ function Login() {
             bottom: '-10px',
             width: `${p.size}px`,
             height: `${p.size}px`,
-            backgroundColor: p.color,
-            animation: `floatUp ${p.duration} ${p.delay} infinite ease-out`,
-            opacity: 0,
+            transform: `translate(${(mouse.x - 0.5) * (10 + i * 2)}px, ${(mouse.y - 0.5) * (8 + i * 2)}px)`,
+            transition: 'transform 0.6s ease-out',
           }}
-        />
+        >
+          <div
+            className="w-full h-full rounded-full"
+            style={{
+              backgroundColor: p.color,
+              animation: `floatUp ${p.duration} ${p.delay} infinite ease-out`,
+              opacity: 0,
+            }}
+          />
+        </div>
       ))}
-      {particles.slice(12).map((p) => (
+      {particles.slice(12).map((p, i) => (
         <div
           key={p.id}
           className="absolute rounded-full pointer-events-none hidden sm:block"
@@ -87,40 +107,64 @@ function Login() {
             bottom: '-10px',
             width: `${p.size}px`,
             height: `${p.size}px`,
-            backgroundColor: p.color,
-            animation: `floatUp ${p.duration} ${p.delay} infinite ease-out`,
-            opacity: 0,
+            transform: `translate(${(mouse.x - 0.5) * (10 + i * 2)}px, ${(mouse.y - 0.5) * (8 + i * 2)}px)`,
+            transition: 'transform 0.6s ease-out',
           }}
-        />
+        >
+          <div
+            className="w-full h-full rounded-full"
+            style={{
+              backgroundColor: p.color,
+              animation: `floatUp ${p.duration} ${p.delay} infinite ease-out`,
+              opacity: 0,
+            }}
+          />
+        </div>
       ))}
 
-      {codeFragments.slice(0, 8).map((f) => (
-        <span
+      {codeFragments.slice(0, 8).map((f, i) => (
+        <div
           key={f.id}
-          className={`absolute font-mono text-[#c0caf5]/30 pointer-events-none select-none ${f.size}`}
+          className="absolute pointer-events-none select-none"
           style={{
             left: f.left,
             bottom: '-40px',
-            animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
-            opacity: 0,
+            transform: `translate(${(mouse.x - 0.5) * (15 + i * 3)}px, ${(mouse.y - 0.5) * (12 + i * 2)}px)`,
+            transition: 'transform 0.8s ease-out',
           }}
         >
-          {f.text}
-        </span>
+          <span
+            className={`font-mono text-[#c0caf5]/30 ${f.size}`}
+            style={{
+              animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
+              opacity: 0,
+            }}
+          >
+            {f.text}
+          </span>
+        </div>
       ))}
-      {codeFragments.slice(8).map((f) => (
-        <span
+      {codeFragments.slice(8).map((f, i) => (
+        <div
           key={f.id}
-          className={`absolute font-mono text-[#c0caf5]/30 pointer-events-none select-none hidden sm:block ${f.size}`}
+          className="absolute pointer-events-none select-none hidden sm:block"
           style={{
             left: f.left,
             bottom: '-40px',
-            animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
-            opacity: 0,
+            transform: `translate(${(mouse.x - 0.5) * (15 + i * 3)}px, ${(mouse.y - 0.5) * (12 + i * 2)}px)`,
+            transition: 'transform 0.8s ease-out',
           }}
         >
-          {f.text}
-        </span>
+          <span
+            className={`font-mono text-[#c0caf5]/30 ${f.size}`}
+            style={{
+              animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
+              opacity: 0,
+            }}
+          >
+            {f.text}
+          </span>
+        </div>
       ))}
 
       <div className="relative z-10 w-full max-w-md mx-4 animate-[slideUpFade_0.6s_ease-out]">
