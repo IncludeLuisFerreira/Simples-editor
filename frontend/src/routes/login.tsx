@@ -50,9 +50,27 @@ function Login() {
       <div className="relative z-10 w-full max-w-md mx-4 animate-[slideUpFade_0.6s_ease-out]">
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#7aa2f7] to-transparent rounded-full" />
         <div className="bg-[#24283b]/70 backdrop-blur-xl border border-[#292e42] rounded-2xl shadow-2xl shadow-[#7aa2f7]/5 p-8 md:p-10">
-          <h2 className="text-2xl font-semibold text-center mb-6 text-[#c0caf5]">
-            Entrar no Simples Editor
-          </h2>
+          <div className="flex flex-col items-center mb-6">
+            <span
+              className="text-5xl font-mono font-bold text-[#7aa2f7] select-none mb-4"
+              style={{ animation: 'pulseGlow 2s ease-in-out infinite' }}
+            >
+              &lt;/&gt;
+            </span>
+            <h1
+              className="text-3xl font-bold text-[#c0caf5]"
+              style={{ animation: 'fadeIn 0.6s 0.1s ease-out both' }}
+            >
+              <span className="text-[#7aa2f7]">S</span>imples Editor
+            </h1>
+            <p
+              className="text-[#a9b1d6] text-sm mt-2"
+              style={{ animation: 'fadeIn 0.6s 0.2s ease-out both' }}
+            >
+              Compilador didático da linguagem Simples
+            </p>
+          </div>
+          <hr className="border-[#292e42] mb-6" />
           <Auth
             supabaseClient={supabase}
             appearance={{ theme: ThemeSupa }}
