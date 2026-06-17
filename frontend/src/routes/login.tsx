@@ -107,13 +107,13 @@ function Login() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(122,162,247,0.06),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(187,154,247,0.04),transparent_50%)]" />
       <div
-        className="absolute pointer-events-none"
+        className="absolute pointer-events-none z-0"
         style={{
           left: 0,
           top: 0,
           width: '100%',
           height: '100%',
-          background: `radial-gradient(300px circle at ${mouse.x}px ${mouse.y}px, rgba(122,162,247,0.07), rgba(187,154,247,0.04), transparent 60%)`,
+          background: `radial-gradient(200px circle at ${mouse.x}px ${mouse.y}px, rgba(122,162,247,0.05), rgba(187,154,247,0.02), transparent 50%)`,
           transition: 'opacity 0.3s',
         }}
       />
