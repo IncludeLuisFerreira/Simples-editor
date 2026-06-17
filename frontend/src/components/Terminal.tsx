@@ -75,7 +75,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
     if (!terminalRef.current) return
 
     const term = new XtermTerminal({
-      theme: { background: '#1a1a2e', foreground: '#e0e0e0', cursor: '#00bcd4' },
+      theme: { background: '#1a1b26', foreground: '#c0caf5', cursor: '#7aa2f7' },
       fontSize: 13,
       fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace",
       cursorBlink: true,

@@ -152,7 +152,7 @@ function Index() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <div className="flex items-center gap-3 px-4 py-2 bg-[#1a1a2e] border-b border-[#0f3460]">
+      <div className="flex items-center gap-3 px-4 py-2 bg-[#24283b] border-b border-[#292e42]">
         <button
           onClick={handleRun}
           disabled={
@@ -162,7 +162,7 @@ function Index() {
             execState === 'connecting' ||
             execState === 'stopping'
           }
-          className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
+          className="px-4 py-1.5 bg-[#7aa2f7] hover:bg-[#89b4fa] text-[#1a1b26] disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
         >
           {isCompiling
             ? 'Compilando...'
@@ -177,7 +177,7 @@ function Index() {
         <select
           value={selectedExample}
           onChange={(e) => handleExampleSelect(e.target.value)}
-          className="px-3 py-1.5 bg-[#0f3460] border border-[#1a5276] rounded text-sm text-gray-200 hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-colors cursor-pointer"
+          className="px-3 py-1.5 bg-[#24283b] border border-[#292e42] rounded text-sm text-[#c0caf5] hover:border-[#7aa2f7] focus:outline-none focus:border-[#7aa2f7] transition-colors cursor-pointer"
           aria-label="Carregar exemplo"
         >
           <option value="" disabled>
@@ -193,29 +193,29 @@ function Index() {
           <>
             <button
               onClick={stop}
-              className="px-4 py-1.5 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors"
+              className="px-4 py-1.5 bg-[#f7768e] hover:bg-[#ff8fa0] text-[#1a1b26] rounded text-sm font-medium transition-colors"
             >
               ■ Stop
             </button>
-            <span className="text-sm text-cyan-400 animate-pulse">⏳ Aguardando input...</span>
+            <span className="text-sm text-[#7aa2f7] animate-pulse">⏳ Aguardando input...</span>
           </>
         )}
         {execState === 'finished' && exitCode !== null && (
-          <span className={`text-sm ${exitCode === 0 ? 'text-green-400' : 'text-red-400'}`}>
+          <span className={`text-sm ${exitCode === 0 ? 'text-[#9ece6a]' : 'text-[#f7768e]'}`}>
             Exit code: {exitCode}
           </span>
         )}
-        {execState === 'timeout' && <span className="text-sm text-yellow-400">Timeout (10s)</span>}
+        {execState === 'timeout' && <span className="text-sm text-[#e0af68]">Timeout (10s)</span>}
         {execState === 'error' && execError && (
-          <span className="text-sm text-red-400">{execError}</span>
+          <span className="text-sm text-[#f7768e]">{execError}</span>
         )}
       </div>
       {infraError && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-red-900/40 border-b border-red-700 text-red-300 text-sm animate-[slideDown_0.2s_ease-out]">
+        <div className="flex items-center gap-2 px-4 py-2 bg-[#f7768e]/10 border-b border-[#f7768e]/30 text-[#f7768e] text-sm animate-[slideDown_0.2s_ease-out]">
           <span>⚠ {infraError}</span>
           <button
             onClick={() => setInfraError(null)}
-            className="ml-auto text-red-400 hover:text-red-200 leading-none"
+            className="ml-auto text-[#f7768e]/70 hover:text-[#f7768e] leading-none"
             aria-label="Fechar aviso"
           >
             ✕
@@ -231,12 +231,12 @@ function Index() {
             markers={markers}
           />
         </Panel>
-        <PanelResizeHandle className="w-1 bg-[#0f3460] hover:bg-cyan-700 transition-colors cursor-col-resize" />
+        <PanelResizeHandle className="w-1 bg-[#292e42] hover:bg-[#7aa2f7] transition-colors cursor-col-resize" />
         <Panel defaultSize={45} minSize={20}>
           <NasmPanel state={nasmState} asm={nasmAsm} errorLog={nasmErrorLog} />
         </Panel>
       </PanelGroup>
-      <div className="h-52 border-t border-[#0f3460]">
+      <div className="h-52 border-t border-[#292e42]">
         <Terminal ref={terminalRef} onInput={sendInput} onOutput={registerOutput} />
       </div>
       <ConfirmDialog
