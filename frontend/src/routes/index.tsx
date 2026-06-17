@@ -222,23 +222,30 @@ function Index() {
           </button>
         </div>
       )}
-      <PanelGroup orientation="horizontal" className="flex-1 min-h-0">
-        <Panel defaultSize={55} minSize={25}>
-          <SimplesEditor
-            value={code}
-            onChange={setCode}
-            readOnly={isCompiling || execState === 'running'}
-            markers={markers}
-          />
+      <PanelGroup orientation="vertical" className="flex-1 min-h-0">
+        <Panel defaultSize={70} minSize={30}>
+          <PanelGroup orientation="horizontal" className="h-full">
+            <Panel defaultSize={55} minSize={25}>
+              <SimplesEditor
+                value={code}
+                onChange={setCode}
+                readOnly={isCompiling || execState === 'running'}
+                markers={markers}
+              />
+            </Panel>
+            <PanelResizeHandle className="w-1 bg-[#292e42] hover:bg-[#7aa2f7] transition-colors cursor-col-resize" />
+            <Panel defaultSize={45} minSize={20}>
+              <NasmPanel state={nasmState} asm={nasmAsm} errorLog={nasmErrorLog} />
+            </Panel>
+          </PanelGroup>
         </Panel>
-        <PanelResizeHandle className="w-1 bg-[#292e42] hover:bg-[#7aa2f7] transition-colors cursor-col-resize" />
-        <Panel defaultSize={45} minSize={20}>
-          <NasmPanel state={nasmState} asm={nasmAsm} errorLog={nasmErrorLog} />
+        <PanelResizeHandle className="h-1 bg-[#292e42] hover:bg-[#7aa2f7] transition-colors cursor-row-resize" />
+        <Panel defaultSize={30} minSize={15}>
+          <div className="h-full border-t border-[#292e42]">
+            <Terminal ref={terminalRef} onInput={sendInput} onOutput={registerOutput} />
+          </div>
         </Panel>
       </PanelGroup>
-      <div className="h-52 border-t border-[#292e42]">
-        <Terminal ref={terminalRef} onInput={sendInput} onOutput={registerOutput} />
-      </div>
       <ConfirmDialog
         open={confirmOpen}
         title="Substituir código?"
