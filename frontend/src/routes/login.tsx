@@ -231,7 +231,7 @@ function Login() {
         )
       })}
 
-      <div className="relative z-10 w-full max-w-md mx-4 animate-[slideUpFade_0.6s_ease-out]">
+      <div className="relative z-10 w-full max-w-md mx-4 -mt-24 animate-[slideUpFade_0.6s_ease-out]">
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#7aa2f7] to-transparent rounded-full" />
         <div className="bg-[#24283b]/70 backdrop-blur-xl border border-[#292e42] rounded-2xl shadow-2xl shadow-[#7aa2f7]/5 p-8 md:p-10">
           <div className="flex flex-col items-center mb-6">
