@@ -21,3 +21,7 @@
     transform: translateY(0);
   }
 }
+
+.xterm .xterm-viewport {
+  padding-left: 6px;
+}
