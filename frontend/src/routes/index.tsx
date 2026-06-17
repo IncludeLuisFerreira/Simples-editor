@@ -223,7 +223,7 @@ function Index() {
           <NasmPanel state={nasmState} asm={nasmAsm} errorLog={nasmErrorLog} />
         </Panel>
       </PanelGroup>
-      <div className="h-52 border-t border-[#0f3460] px-3 py-1">
+      <div className="h-52 border-t border-[#0f3460]">
         <Terminal ref={terminalRef} onInput={sendInput} onOutput={registerOutput} />
       </div>
       <ConfirmDialog
