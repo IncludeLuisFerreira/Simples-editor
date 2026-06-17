@@ -234,11 +234,150 @@ class TestCompilerServiceFull:
 
     def test_compile_full_invalid_utf8(self):
         service = CompilerService(compile_timeout=30, max_code_kb=64)
-        # Python str cannot contain surrogates, so we need to trick encode()
-        # Use a string with a surrogate character that fails encode('utf-8')
-        bad_code = '\ud800'  # lone surrogate, fails UTF-8 encode
+        bad_code = '\ud800'
         result = service.compile_full(bad_code)
 
         assert not result.success
         assert result.phase == 'validation'
         assert result.error == 'Invalid UTF-8 in source code'
+
+    @patch('app.services.compiler.shutil.rmtree')
+    @patch('app.services.compiler.Path')
+    @patch('app.services.compiler.subprocess.run')
+    @patch('app.services.compiler.uuid4')
+    def test_compile_full_timeout(self, mock_uuid4, mock_run, mock_path_class, mock_rmtree):
+        mock_uuid4.return_value.hex = 'test-uuid'
+        mock_tmpdir = MagicMock()
+        mock_path_class.return_value = mock_tmpdir
+        mock_tmpdir.__truediv__.return_value = MagicMock()
+
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd='simplesc', timeout=30)
+
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        result = service.compile_full('programa x\ninicio\nfim\n')
+
+        assert not result.success
+        assert result.error == 'Compilation timed out'
+        assert result.phase == 'compiler'
+
+    @patch('app.services.compiler.shutil.rmtree')
+    @patch('app.services.compiler.Path')
+    @patch('app.services.compiler.subprocess.run')
+    @patch('app.services.compiler.uuid4')
+    def test_compile_full_output_not_generated(
+        self, mock_uuid4, mock_run, mock_path_class, mock_rmtree
+    ):
+        mock_uuid4.return_value.hex = 'test-uuid'
+        mock_tmpdir = MagicMock()
+        mock_path_class.return_value = mock_tmpdir
+        mock_file = MagicMock()
+        mock_file.exists.return_value = False
+        mock_tmpdir.__truediv__.return_value = mock_file
+
+        ok = MagicMock(returncode=0, stdout=b'', stderr=b'')
+        mock_run.side_effect = [ok]
+
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        result = service.compile_full('programa x\ninicio\nfim\n')
+
+        assert not result.success
+        assert result.error == 'Output file not generated'
+        assert result.phase == 'compiler'
+
+    @patch('app.services.compiler.shutil.rmtree')
+    @patch('app.services.compiler.Path')
+    @patch('app.services.compiler.subprocess.run')
+    @patch('app.services.compiler.uuid4')
+    def test_compile_full_simplesc_error_unparsed(
+        self, mock_uuid4, mock_run, mock_path_class, mock_rmtree
+    ):
+        mock_uuid4.return_value.hex = 'test-uuid'
+        mock_tmpdir = MagicMock()
+        mock_path_class.return_value = mock_tmpdir
+        mock_tmpdir.__truediv__.return_value = MagicMock()
+
+        mock_run.return_value = MagicMock(
+            returncode=1, stdout=b'', stderr=b'generic compiler error'
+        )
+
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        result = service.compile_full('programa x\ninicio\nfim\n')
+
+        assert not result.success
+        assert result.error == 'generic compiler error'
+        assert result.phase == 'compiler'
+        assert mock_run.call_count == 1
+
+
+class TestCompilerServiceValidation:
+    def test_compile_invalid_characters(self):
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        code = 'programa teste\ninicio\n\0corrompido\nfim\n'
+        result = service.compile(code)
+
+        assert not result.success
+        assert result.phase == 'validation'
+        assert 'invalid character' in result.error
+
+    def test_compile_full_invalid_characters(self):
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        code = 'programa teste\ninicio\n\0corrompido\nfim\n'
+        result = service.compile_full(code)
+
+        assert not result.success
+        assert result.phase == 'validation'
+        assert 'invalid character' in result.error
+
+    def test_compile_empty_code(self):
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        result = service.compile('')
+
+        assert not result.success
+        assert result.phase == 'validation'
+
+    def test_compile_full_empty_code(self):
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        result = service.compile_full('')
+
+        assert not result.success
+        assert result.phase == 'validation'
+
+
+class TestParseSimplescStderr:
+    def test_parse_lexer_error(self):
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        stderr = b'lexer:3:10: caracter invalido: "@"\n'
+        result = service._parse_simplesc_stderr(stderr)
+
+        assert not result.success
+        assert result.phase == 'lexer'
+        assert result.line == 3
+        assert result.column == 10
+        assert result.error == 'caracter invalido: "@"'
+
+    def test_parse_semantic_error(self):
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        stderr = b'semantic:5:12: variavel nao declarada: "x"\n'
+        result = service._parse_simplesc_stderr(stderr)
+
+        assert not result.success
+        assert result.phase == 'semantic'
+        assert result.line == 5
+        assert result.column == 12
+        assert result.error == 'variavel nao declarada: "x"'
+
+    def test_parse_unexpected_error(self):
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        stderr = b'unexpected error output\n'
+        result = service._parse_simplesc_stderr(stderr)
+
+        assert not result.success
+        assert result.phase == 'compiler'
+        assert result.error == 'unexpected error output'
+
+    def test_parse_empty_stderr(self):
+        service = CompilerService(compile_timeout=30, max_code_kb=64)
+        result = service._parse_simplesc_stderr(b'')
+        assert not result.success
+        assert result.phase == 'compiler'
+        assert result.error == 'Unknown compilation error'

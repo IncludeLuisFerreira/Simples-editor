@@ -2,9 +2,16 @@ import os
 import re
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
+
+import structlog
+
+from app.services.validation import validate_code
+
+logger = structlog.get_logger()
 
 
 @dataclass
@@ -29,7 +36,7 @@ class CompilerService:
             max_code_kb if max_code_kb is not None else int(os.getenv('MAX_CODE_KB', '64'))
         ) * 1024
 
-    def compile(self, code: str) -> CompileResult:
+    def _validate(self, code: str) -> CompileResult | None:
         try:
             code_bytes = code.encode('utf-8')
         except UnicodeEncodeError:
@@ -44,6 +51,17 @@ class CompilerService:
                 phase='validation',
             )
 
+        validation_error = validate_code(code)
+        if validation_error:
+            return CompileResult(success=False, error=validation_error, phase='validation')
+
+        return None
+
+    def compile(self, code: str) -> CompileResult:
+        validation = self._validate(code)
+        if validation:
+            return validation
+
         tmpdir = None
         try:
             tmpdir = Path(f'/tmp/sim-{uuid4().hex}')
@@ -53,11 +71,16 @@ class CompilerService:
             output_path = tmpdir / 'output.asm'
             input_path.write_text(code, encoding='utf-8')
 
+            t0 = time.time()
             result = subprocess.run(
                 ['simplesc', str(input_path), '-o', str(output_path)],
                 cwd=str(tmpdir),
                 capture_output=True,
                 timeout=self._compile_timeout,
+            )
+            duration = round(time.time() - t0, 2)
+            logger.info(
+                'compile_phase', phase='simplesc', duration_s=duration, exit_code=result.returncode
             )
 
             if result.returncode == 0:
@@ -87,6 +110,7 @@ class CompilerService:
             )
 
         except subprocess.TimeoutExpired:
+            logger.warning('compile_timeout', phase='compiler', timeout_s=self._compile_timeout)
             return CompileResult(success=False, error='Compilation timed out', phase='compiler')
         finally:
             if tmpdir is not None and tmpdir.exists():
@@ -114,19 +138,9 @@ class CompilerService:
         )
 
     def compile_full(self, code: str) -> CompileResult:
-        try:
-            code_bytes = code.encode('utf-8')
-        except UnicodeEncodeError:
-            return CompileResult(
-                success=False, error='Invalid UTF-8 in source code', phase='validation'
-            )
-
-        if len(code_bytes) > self._max_code_bytes:
-            return CompileResult(
-                success=False,
-                error=f'Code exceeds maximum size of {self._max_code_bytes // 1024} KB',
-                phase='validation',
-            )
+        validation = self._validate(code)
+        if validation:
+            return validation
 
         tmpdir = None
         try:
@@ -140,11 +154,16 @@ class CompilerService:
 
             input_path.write_text(code, encoding='utf-8')
 
+            t0 = time.time()
             sc = subprocess.run(
                 ['simplesc', str(input_path), '-o', str(asm_path)],
                 cwd=str(tmpdir),
                 capture_output=True,
                 timeout=self._compile_timeout,
+            )
+            duration = round(time.time() - t0, 2)
+            logger.info(
+                'compile_phase', phase='simplesc', duration_s=duration, exit_code=sc.returncode
             )
             if sc.returncode != 0:
                 shutil.rmtree(tmpdir)
@@ -156,11 +175,16 @@ class CompilerService:
                 )
             asm_text = asm_path.read_text(encoding='utf-8')
 
+            t0 = time.time()
             nasm = subprocess.run(
                 ['nasm', '-f', 'elf32', str(asm_path), '-o', str(obj_path)],
                 cwd=str(tmpdir),
                 capture_output=True,
                 timeout=self._compile_timeout,
+            )
+            duration = round(time.time() - t0, 2)
+            logger.info(
+                'compile_phase', phase='nasm', duration_s=duration, exit_code=nasm.returncode
             )
             if nasm.returncode != 0:
                 shutil.rmtree(tmpdir)
@@ -170,12 +194,15 @@ class CompilerService:
                     phase='nasm',
                 )
 
+            t0 = time.time()
             ld = subprocess.run(
                 ['i686-linux-gnu-ld', '-m', 'elf_i386', str(obj_path), '-o', str(bin_path)],
                 cwd=str(tmpdir),
                 capture_output=True,
                 timeout=self._compile_timeout,
             )
+            duration = round(time.time() - t0, 2)
+            logger.info('compile_phase', phase='ld', duration_s=duration, exit_code=ld.returncode)
             if ld.returncode != 0:
                 shutil.rmtree(tmpdir)
                 return CompileResult(
@@ -189,4 +216,5 @@ class CompilerService:
         except subprocess.TimeoutExpired:
             if tmpdir is not None and tmpdir.exists():
                 shutil.rmtree(tmpdir)
+            logger.warning('compile_timeout', phase='compiler', timeout_s=self._compile_timeout)
             return CompileResult(success=False, error='Compilation timed out', phase='compiler')

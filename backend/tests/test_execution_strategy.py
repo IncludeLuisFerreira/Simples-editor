@@ -3,7 +3,96 @@ import os
 import tempfile
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.strategies.execution import PtyExecutionStrategy
+
+
+def _docker_available():
+    try:
+        import docker
+
+        client = docker.from_env()
+        client.ping()
+        client.images.get('simples-runner:latest')
+        return True
+    except Exception:
+        return False
+
+
+@pytest.mark.skipif(not _docker_available(), reason='Docker not available')
+class TestSandboxEscapeIntegration:
+    RUNNER_IMAGE = os.getenv('RUNNER_IMAGE', 'simples-runner:latest')
+
+    @staticmethod
+    def _run_in_sandbox(script: str, timeout: int = 15) -> tuple[int, str]:
+        import docker as docker_mod
+
+        client = docker_mod.from_env()
+        container = client.containers.create(
+            image=TestSandboxEscapeIntegration.RUNNER_IMAGE,
+            command=f'sh -c "{script}"',
+            working_dir='/sandbox',
+            read_only=True,
+            network_mode='none',
+            mem_limit='128m',
+            memswap_limit='128m',
+            nano_cpus=500_000_000,
+            user='65534:65534',
+            pids_limit=64,
+            cap_drop=['ALL'],
+            security_opt=['no-new-privileges:true'],
+            tmpfs={'/tmp': 'size=8m,exec,nosuid,nodev,mode=1777'},
+            privileged=False,
+        )
+        try:
+            container.start()
+            result = container.wait(timeout=timeout)
+            logs = container.logs(stdout=True, stderr=True).decode('utf-8', errors='replace')
+            return result['StatusCode'], logs
+        except Exception:
+            try:
+                container.kill()
+            except Exception:
+                pass
+            return -1, ''
+        finally:
+            try:
+                container.remove(force=True)
+            except Exception:
+                pass
+
+    def test_fork_bomb_is_contained_by_pid_limit(self):
+        exit_code, logs = self._run_in_sandbox(
+            ':(){ :|:& };:',
+            timeout=10,
+        )
+        assert exit_code != 0, (
+            f'Fork bomb escaped sandbox (exit 0). '
+            f'The container should have been killed by PID limit or timeout.\nLogs: {logs}'
+        )
+
+    def test_network_is_blocked_by_network_mode_none(self):
+        exit_code, logs = self._run_in_sandbox(
+            'ls /sys/class/net/ 2>&1',
+            timeout=10,
+        )
+        interfaces = logs.strip().split()
+        non_loopback = [i for i in interfaces if i != 'lo']
+        assert len(non_loopback) == 0, (
+            f'Container has network interfaces besides loopback: {non_loopback}. '
+            f'network_mode=none should isolate all networking.\nLogs: {logs}'
+        )
+
+    def test_filesystem_write_outside_tmpfs_is_blocked(self):
+        exit_code, logs = self._run_in_sandbox(
+            'touch /etc/test_sandbox_write 2>&1 && echo WRITE_OK || echo WRITE_BLOCKED',
+            timeout=10,
+        )
+        assert 'WRITE_BLOCKED' in logs, (
+            f'Write to /etc outside tmpfs succeeded. '
+            f'read_only rootfs + nobody user should block writes.\nExit: {exit_code}\nLogs: {logs}'
+        )
 
 
 class TestPtyExecutionStrategy:
@@ -35,7 +124,10 @@ class TestPtyExecutionStrategy:
 
         ws = MagicMock()
         strategy = PtyExecutionStrategy()
-        with patch('app.strategies.execution.gevent.spawn'), patch('builtins.open', create=True):
+        with (
+            patch('app.strategies.execution.gevent.spawn'),
+            patch('builtins.open', create=True),
+        ):
             strategy.spawn(ws, binary_session_key='test_key')
 
         mock_makedirs.assert_called_once()
@@ -120,7 +212,7 @@ class TestPtyExecutionStrategy:
         strategy.container = mock_container
         strategy._stream_output(ws, mock_socket)
 
-        ws.send.assert_any_call(json.dumps({'type': 'timeout'}))
+        ws.send.assert_any_call(json.dumps({'type': 'timeout', 'limit_s': 10}))
 
     @patch('app.strategies.execution.shutil.rmtree')
     def test_terminate_sends_sigterm_then_sigkill(self, mock_rmtree):
@@ -152,7 +244,87 @@ class TestPtyExecutionStrategy:
 
         mock_socket._sock.send.assert_called_once_with(b'42\n')
 
-    # stderr streaming verified by stdout test above (same multiplex parser, different stream type)
+    def test_streams_stderr_to_ws(self):
+        mock_container = MagicMock()
+        mock_container.wait.return_value = {'StatusCode': 1}
+        mock_socket = MagicMock()
+        stderr_header = bytes([2, 0, 0, 0, 0, 0, 0, 6])
+        stderr_payload = b'error\n'
+        mock_socket._sock.recv.side_effect = [stderr_header, stderr_payload, b'']
+
+        ws = MagicMock()
+        strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
+        with (
+            patch('app.strategies.execution.gevent.spawn_later'),
+            patch('app.strategies.execution.gevent.event.Event') as mock_event,
+        ):
+            mock_event.return_value.is_set.return_value = False
+            strategy._stream_output(ws, mock_socket)
+
+        ws.send.assert_any_call(json.dumps({'type': 'error', 'data': 'error\n'}))
+
+    def test_force_kill_sends_sigterm_then_sigkill(self):
+        mock_container = MagicMock()
+        strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
+        strategy._force_kill()
+
+        kill_calls = [call[0][0] for call in mock_container.kill.call_args_list]
+        assert 'SIGTERM' in kill_calls
+        assert 'SIGKILL' in kill_calls
+
+    def test_force_kill_swallows_exceptions(self):
+        mock_container = MagicMock()
+        mock_container.kill.side_effect = Exception('kill failed')
+        strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
+        strategy._force_kill()
+
+    def test_terminate_without_container_does_nothing(self):
+        ws = MagicMock()
+        strategy = PtyExecutionStrategy()
+        strategy.container = None
+        strategy.terminate(ws)
+        ws.send.assert_not_called()
+
+    def test_write_without_stdin_socket_does_nothing(self):
+        strategy = PtyExecutionStrategy()
+        strategy._stdin_socket = None
+        strategy.write('test')  # should not raise
+
+    def test_spawn_exception_calls_cleanup(self):
+        with (
+            patch('app.strategies.execution.docker.from_env') as mock_docker,
+            patch('app.strategies.execution.os.makedirs'),
+            patch('app.strategies.execution.shutil.copy'),
+            patch('app.strategies.execution.os.chmod'),
+            patch('app.strategies.execution.os.path.getsize'),
+            patch('app.strategies.execution.os.path.exists', return_value=True),
+            patch('app.strategies.execution.uuid4') as mock_uuid4,
+            patch('app.strategies.execution.shutil.rmtree') as mock_rmtree,
+        ):
+            mock_uuid4.return_value.hex = 'testabc123'
+            mock_docker.return_value.containers.create.side_effect = Exception('docker error')
+
+            ws = MagicMock()
+            strategy = PtyExecutionStrategy()
+            with pytest.raises(Exception):
+                strategy.spawn(ws, binary_session_key='test_key')
+
+            mock_rmtree.assert_called_once()
+
+    def test_stream_output_oserror_breaks_loop(self):
+        mock_container = MagicMock()
+        mock_container.wait.return_value = {'StatusCode': 0}
+        mock_socket = MagicMock()
+        mock_socket._sock.recv.side_effect = OSError('connection reset')
+
+        ws = MagicMock()
+        strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
+        with patch('app.strategies.execution.gevent.spawn_later'):
+            strategy._stream_output(ws, mock_socket)
 
 
 class TestExecutionStrategyIntegration:

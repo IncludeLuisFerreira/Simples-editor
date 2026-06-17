@@ -1,6 +1,6 @@
 # 📊 Simples Editor — Progresso de Implementação
-**Última atualização:** 2026-06-15
-**Progresso geral:** 27/46 issues (59%)
+**Última atualização:** 2026-06-16
+**Progresso geral:** 42/46 issues (91%)
 ---
 
 ## Sprint 1 — Fundação e Autenticação (7/7)
@@ -29,26 +29,26 @@
 - [x] #26 feat(frontend): implement WebSocket client state machine
 - [x] #27 feat(frontend): add Run and Stop buttons
 
-## Sprint 4 — Segurança e Limites (0/6)
-- [ ] #28 feat(security): harden sandbox container
-- [ ] #29 feat(backend): add rate limiting
-- [ ] #30 feat(backend): add input validation
-- [ ] #31 feat(backend): implement three-layer timeouts
-- [ ] #32 feat(backend): add structured logging
-- [ ] #33 feat(backend): enhance health check endpoint
+## Sprint 4 — Segurança e Limites (6/6)
+- [x] #28 feat(security): harden sandbox container
+- [x] #29 feat(backend): add rate limiting
+- [x] #30 feat(backend): add input validation
+- [x] #31 feat(backend): implement three-layer timeouts
+- [x] #32 feat(backend): add structured logging
+- [x] #33 feat(backend): enhance health check endpoint
 
-## Sprint 5 — Observabilidade e Deploy (0/6)
-- [ ] #34 feat(backend): add Prometheus metrics
-- [ ] #35 feat(devops): create Terraform for OCI Ampere A1
-- [ ] #36 feat(devops): deploy to OCI with TLS
-- [ ] #37 feat(backend): validate qemu-user on ARM64
-- [ ] #38 docs(deploy): create production deployment playbook
-- [ ] #39 feat(devops): configure monitoring and alerting
+## Sprint 5 — Observabilidade e Deploy (6/6)
+- [x] #34 feat(backend): add Prometheus metrics
+- [x] #35 feat(devops): create Terraform for OCI Ampere A1
+- [x] #36 feat(devops): deploy to OCI with TLS
+- [x] #37 feat(backend): validate qemu-user on ARM64
+- [x] #38 docs(deploy): create production deployment playbook
+- [x] #39 feat(devops): configure monitoring and alerting
 
-## Sprint 6 — Testes e Documentação (0/7)
-- [ ] #40 test(backend): add unit tests for compilation pipeline
-- [ ] #41 test(backend): add unit tests for execution strategy
-- [ ] #42 test(frontend): add component tests
+## Sprint 6 — Testes e Documentação (3/7)
+- [x] #40 test(backend): add unit tests for compilation pipeline
+- [x] #41 test(backend): add unit tests for execution strategy
+- [x] #42 test(frontend): add component tests
 - [ ] #43 test(e2e): add Playwright tests for 7 canonical examples
 - [ ] #44 feat(frontend): add code examples dropdown
 - [ ] #45 docs(user): create student usage guide

@@ -1,0 +1,55 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - docker.io
+  - docker-compose-v2
+  - ufw
+  - htop
+  - iptables-persistent
+
+runcmd:
+  # Docker
+  - systemctl enable docker
+  - systemctl start docker
+  - usermod -aG docker ubuntu
+
+  # Firewall
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow 22/tcp
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw --force enable
+
+  # GitHub CLI
+  - curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+  - apt-get update -qq
+  - apt-get install -y -qq gh
+
+  # Clone and setup
+  - mkdir -p /opt/simples-editor
+  - cd /opt/simples-editor
+  - git clone https://github.com/IncludeLuisFerreira/Simples-editor.git .
+
+  # Kernel params for qemu binfmt
+  - echo ':i386:M::\x7fELF\x01\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x03\x00:\xff\xff\xff\xff\xff\xfe\xfe\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfa\xff\xff\xff:/usr/bin/qemu-i386-static:F' | tee /proc/sys/fs/binfmt_misc/register || true
+  - apt-get install -y -qq qemu-user-static
+
+  # Docker cleanup cron
+  - echo "0 3 * * * root docker container prune -f && docker image prune -f" | tee /etc/cron.d/docker-cleanup
+
+write_files:
+  - path: /opt/simples-editor/.env
+    content: |
+      SECRET_KEY=
+      SUPABASE_URL=
+      SUPABASE_ANON_KEY=
+      JWT_SECRET=
+      VITE_SUPABASE_URL=
+      VITE_SUPABASE_ANON_KEY=
+      RUNNER_IMAGE=simples-runner:latest
+    permissions: '0600'
+    owner: root:root
