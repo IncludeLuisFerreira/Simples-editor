@@ -82,7 +82,7 @@ function Login() {
       {codeFragments.map((f) => (
         <span
           key={f.id}
-          className={`absolute font-mono text-[#c0caf5]/5 pointer-events-none select-none ${f.size}`}
+          className={`absolute font-mono text-[#c0caf5]/20 pointer-events-none select-none ${f.size}`}
           style={{
             left: f.left,
             bottom: '-40px',
