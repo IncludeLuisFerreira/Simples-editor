@@ -39,6 +39,23 @@
   }
 }
 
+@keyframes driftUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100vh) scale(0.6);
+    opacity: 0;
+  }
+}
+
 @keyframes drift {
   0% {
     transform: translateX(0);
@@ -57,7 +74,9 @@
     text-shadow: 0 0 20px rgba(122, 162, 247, 0.4);
   }
   50% {
-    text-shadow: 0 0 40px rgba(122, 162, 247, 0.7), 0 0 60px rgba(122, 162, 247, 0.3);
+    text-shadow:
+      0 0 40px rgba(122, 162, 247, 0.7),
+      0 0 60px rgba(122, 162, 247, 0.3);
   }
 }
 

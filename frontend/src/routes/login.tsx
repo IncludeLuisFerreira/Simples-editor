@@ -82,11 +82,11 @@ function Login() {
       {codeFragments.map((f) => (
         <span
           key={f.id}
-          className={`absolute font-mono text-[#c0caf5]/20 pointer-events-none select-none ${f.size}`}
+          className={`absolute font-mono text-[#c0caf5]/30 pointer-events-none select-none ${f.size}`}
           style={{
             left: f.left,
             bottom: '-40px',
-            animation: `floatUp ${f.duration} ${f.delay} infinite ease-out`,
+            animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
             opacity: 0,
           }}
         >
