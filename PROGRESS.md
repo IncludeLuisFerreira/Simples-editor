@@ -1,6 +1,6 @@
 # 📊 Simples Editor — Progresso de Implementação
 **Última atualização:** 2026-06-16
-**Progresso geral:** 41/46 issues (89%)
+**Progresso geral:** 42/46 issues (91%)
 ---
 
 ## Sprint 1 — Fundação e Autenticação (7/7)
@@ -45,10 +45,10 @@
 - [x] #38 docs(deploy): create production deployment playbook
 - [x] #39 feat(devops): configure monitoring and alerting
 
-## Sprint 6 — Testes e Documentação (2/7)
+## Sprint 6 — Testes e Documentação (3/7)
 - [x] #40 test(backend): add unit tests for compilation pipeline
 - [x] #41 test(backend): add unit tests for execution strategy
-- [ ] #42 test(frontend): add component tests
+- [x] #42 test(frontend): add component tests
 - [ ] #43 test(e2e): add Playwright tests for 7 canonical examples
 - [ ] #44 feat(frontend): add code examples dropdown
 - [ ] #45 docs(user): create student usage guide
