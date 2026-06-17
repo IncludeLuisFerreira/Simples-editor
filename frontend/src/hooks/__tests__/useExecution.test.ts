@@ -38,7 +38,7 @@ describe('useExecution', () => {
     }) as never
   })
 
-  function connectAndRun(result: ReturnType<typeof renderHook<ReturnType<typeof useExecution>>>) {
+  function connectAndRun(result: { current: ReturnType<typeof useExecution> }) {
     act(() => {
       result.current.execute('binary_key')
     })
