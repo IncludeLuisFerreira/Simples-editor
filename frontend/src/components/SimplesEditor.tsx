@@ -106,6 +106,7 @@ export function SimplesEditor({ value, onChange, readOnly = false, markers }: Si
         autoClosingBrackets: 'always',
         matchBrackets: 'always',
         tabSize: 2,
+        placeholder: 'Digite seu código Simples aqui...',
       }}
     />
   )

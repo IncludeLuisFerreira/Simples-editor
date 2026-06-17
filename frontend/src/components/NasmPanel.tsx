@@ -9,7 +9,8 @@ interface NasmPanelProps {
 export function NasmPanel({ state, asm, errorLog }: NasmPanelProps) {
   if (state === 'idle') {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500 text-sm px-4 text-center">
+      <div className="flex flex-col items-center justify-center h-full bg-[#1a1a2e] text-gray-500 text-sm px-4 text-center gap-3 animate-[fadeIn_0.2s_ease-in]">
+        <span className="text-4xl text-gray-600/25 font-mono select-none">&lt;/&gt;</span>
         Compile seu código para ver o assembly gerado
       </div>
     )
@@ -17,7 +18,7 @@ export function NasmPanel({ state, asm, errorLog }: NasmPanelProps) {
 
   if (state === 'compiling') {
     return (
-      <div className="flex items-center justify-center h-full text-gray-400 text-sm gap-2">
+      <div className="flex items-center justify-center h-full bg-[#1a1a2e] text-gray-400 text-sm gap-2 animate-[fadeIn_0.2s_ease-in]">
         <div className="animate-spin h-4 w-4 border-2 border-cyan-400 border-t-transparent rounded-full" />
         Compilando...
       </div>
@@ -26,27 +27,29 @@ export function NasmPanel({ state, asm, errorLog }: NasmPanelProps) {
 
   if (state === 'infra-error') {
     return (
-      <pre className="h-full overflow-auto p-4 text-red-400 text-xs font-mono bg-[#1a1a2e] whitespace-pre-wrap break-words">
+      <pre className="h-full overflow-auto p-4 text-red-400 text-xs font-mono bg-[#1a1a2e] whitespace-pre-wrap break-words animate-[fadeIn_0.2s_ease-in]">
         {errorLog ?? 'Erro desconhecido no toolchain'}
       </pre>
     )
   }
 
   return (
-    <Editor
-      height="100%"
-      language="plaintext"
-      theme="simples-dark"
-      value={asm ?? ''}
-      options={{
-        readOnly: true,
-        minimap: { enabled: false },
-        fontSize: 13,
-        padding: { top: 12 },
-        automaticLayout: true,
-        scrollBeyondLastLine: false,
-        wordWrap: 'off',
-      }}
-    />
+    <div className="h-full animate-[fadeIn_0.2s_ease-in]">
+      <Editor
+        height="100%"
+        language="plaintext"
+        theme="simples-dark"
+        value={asm ?? ''}
+        options={{
+          readOnly: true,
+          minimap: { enabled: false },
+          fontSize: 13,
+          padding: { top: 12 },
+          automaticLayout: true,
+          scrollBeyondLastLine: false,
+          wordWrap: 'off',
+        }}
+      />
+    </div>
   )
 }

@@ -29,8 +29,6 @@ class PtyExecutionStrategy:
     RUNNER_IMAGE = os.getenv('RUNNER_IMAGE', 'simples-runner:latest')
     MEM_LIMIT_MB = int(os.getenv('MEM_SANDBOX_LIMIT_MB', '128'))
     PIDS_LIMIT = int(os.getenv('PIDS_SANDBOX_LIMIT', '64'))
-    DOCKER_STOP_TIMEOUT_S = int(os.getenv('DOCKER_STOP_TIMEOUT_S', '12'))
-
     def __init__(self):
         self.container = None
         self.tmpdir = None
@@ -68,7 +66,6 @@ class PtyExecutionStrategy:
                 security_opt=['no-new-privileges:true'],
                 tmpfs={'/tmp': 'size=8m,exec,nosuid,nodev,mode=1777'},
                 privileged=False,
-                stop_timeout=self.DOCKER_STOP_TIMEOUT_S,
             )
 
             self.container.start()

@@ -139,7 +139,7 @@ function Index() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <div className="flex items-center gap-3 px-4 py-2 bg-[#16213e] border-b border-[#0f3460]">
+      <div className="flex items-center gap-3 px-4 py-2 bg-[#1a1a2e] border-b border-[#0f3460]">
         <button
           onClick={handleRun}
           disabled={
@@ -198,7 +198,7 @@ function Index() {
         )}
       </div>
       {infraError && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-red-900/40 border-b border-red-700 text-red-300 text-sm">
+        <div className="flex items-center gap-2 px-4 py-2 bg-red-900/40 border-b border-red-700 text-red-300 text-sm animate-[slideDown_0.2s_ease-out]">
           <span>⚠ {infraError}</span>
           <button
             onClick={() => setInfraError(null)}
@@ -223,7 +223,7 @@ function Index() {
           <NasmPanel state={nasmState} asm={nasmAsm} errorLog={nasmErrorLog} />
         </Panel>
       </PanelGroup>
-      <div className="h-48 border-t border-[#0f3460]">
+      <div className="h-52 border-t border-[#0f3460]">
         <Terminal ref={terminalRef} onInput={sendInput} onOutput={registerOutput} />
       </div>
       <ConfirmDialog

@@ -28,7 +28,7 @@ function Root() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <header className="border-b border-gray-700">
-        <div className="container mx-auto flex items-center justify-between px-4 py-3">
+        <div className="w-full flex items-center justify-between px-4 py-3">
           <h1 className="text-2xl font-bold">Simples Editor</h1>
           {user && (
             <button
