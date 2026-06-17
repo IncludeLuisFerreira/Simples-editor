@@ -3,6 +3,8 @@ import os
 import tempfile
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.strategies.execution import PtyExecutionStrategy
 
 
@@ -152,7 +154,87 @@ class TestPtyExecutionStrategy:
 
         mock_socket._sock.send.assert_called_once_with(b'42\n')
 
-    # stderr streaming verified by stdout test above (same multiplex parser, different stream type)
+    def test_streams_stderr_to_ws(self):
+        mock_container = MagicMock()
+        mock_container.wait.return_value = {'StatusCode': 1}
+        mock_socket = MagicMock()
+        stderr_header = bytes([2, 0, 0, 0, 0, 0, 0, 6])
+        stderr_payload = b'error\n'
+        mock_socket._sock.recv.side_effect = [stderr_header, stderr_payload, b'']
+
+        ws = MagicMock()
+        strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
+        with (
+            patch('app.strategies.execution.gevent.spawn_later'),
+            patch('app.strategies.execution.gevent.event.Event') as mock_event,
+        ):
+            mock_event.return_value.is_set.return_value = False
+            strategy._stream_output(ws, mock_socket)
+
+        ws.send.assert_any_call(json.dumps({'type': 'error', 'data': 'error\n'}))
+
+    def test_force_kill_sends_sigterm_then_sigkill(self):
+        mock_container = MagicMock()
+        strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
+        strategy._force_kill()
+
+        kill_calls = [call[0][0] for call in mock_container.kill.call_args_list]
+        assert 'SIGTERM' in kill_calls
+        assert 'SIGKILL' in kill_calls
+
+    def test_force_kill_swallows_exceptions(self):
+        mock_container = MagicMock()
+        mock_container.kill.side_effect = Exception('kill failed')
+        strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
+        strategy._force_kill()
+
+    def test_terminate_without_container_does_nothing(self):
+        ws = MagicMock()
+        strategy = PtyExecutionStrategy()
+        strategy.container = None
+        strategy.terminate(ws)
+        ws.send.assert_not_called()
+
+    def test_write_without_stdin_socket_does_nothing(self):
+        strategy = PtyExecutionStrategy()
+        strategy._stdin_socket = None
+        strategy.write('test')  # should not raise
+
+    def test_spawn_exception_calls_cleanup(self):
+        with (
+            patch('app.strategies.execution.docker.from_env') as mock_docker,
+            patch('app.strategies.execution.os.makedirs'),
+            patch('app.strategies.execution.shutil.copy'),
+            patch('app.strategies.execution.os.chmod'),
+            patch('app.strategies.execution.os.path.getsize'),
+            patch('app.strategies.execution.os.path.exists', return_value=True),
+            patch('app.strategies.execution.uuid4') as mock_uuid4,
+            patch('app.strategies.execution.shutil.rmtree') as mock_rmtree,
+        ):
+            mock_uuid4.return_value.hex = 'testabc123'
+            mock_docker.return_value.containers.create.side_effect = Exception('docker error')
+
+            ws = MagicMock()
+            strategy = PtyExecutionStrategy()
+            with pytest.raises(Exception):
+                strategy.spawn(ws, binary_session_key='test_key')
+
+            mock_rmtree.assert_called_once()
+
+    def test_stream_output_oserror_breaks_loop(self):
+        mock_container = MagicMock()
+        mock_container.wait.return_value = {'StatusCode': 0}
+        mock_socket = MagicMock()
+        mock_socket._sock.recv.side_effect = OSError('connection reset')
+
+        ws = MagicMock()
+        strategy = PtyExecutionStrategy()
+        strategy.container = mock_container
+        with patch('app.strategies.execution.gevent.spawn_later'):
+            strategy._stream_output(ws, mock_socket)
 
 
 class TestExecutionStrategyIntegration:
