@@ -1,0 +1,12 @@
+programa fatorial
+  inteiro n, fat, contador
+inicio
+  leia n
+  fat <- 1
+  contador <- 1
+  enquanto contador < n faca
+    contador <- contador + 1
+    fat <- fat * contador
+  fimenquanto
+  escreva fat
+fim
