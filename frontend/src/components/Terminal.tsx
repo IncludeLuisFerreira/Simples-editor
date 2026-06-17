@@ -10,6 +10,7 @@ interface TerminalProps {
 export interface TerminalHandle {
   focus: () => void
   clear: () => void
+  writeMessage: (text: string, style?: 'success' | 'error' | 'timeout') => void
 }
 
 const MARGIN = '      '
@@ -53,6 +54,20 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
       term.write('\x1b[2J\x1b[H')
       bufferRef.current = ''
       writeBanner(term)
+    },
+    writeMessage: (text: string, style: 'success' | 'error' | 'timeout' = 'success') => {
+      const term = xtermRef.current
+      if (!term) return
+      const colors: Record<string, string> = {
+        success: '\x1b[1;32m',
+        error: '\x1b[1;31m',
+        timeout: '\x1b[1;33m',
+      }
+      const c = colors[style] || colors.success
+      term.writeln('')
+      term.writeln(`${MARGIN}${c}${text}\x1b[0m`)
+      term.writeln('')
+      term.write(MARGIN)
     },
   }))
 

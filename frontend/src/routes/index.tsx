@@ -40,8 +40,21 @@ function Index() {
   useEffect(() => {
     if (execState === 'running') {
       terminalRef.current?.focus()
+    } else if (execState === 'finished' && exitCode !== null) {
+      if (exitCode === 0) {
+        terminalRef.current?.writeMessage('Programa finalizado com sucesso.', 'success')
+      } else {
+        terminalRef.current?.writeMessage(
+          `Programa finalizado com erro. Exit code: ${exitCode}`,
+          'error',
+        )
+      }
+    } else if (execState === 'timeout') {
+      terminalRef.current?.writeMessage('Timeout: execução excedeu o limite de tempo.', 'timeout')
+    } else if (execState === 'error' && execError) {
+      terminalRef.current?.writeMessage(`Erro: ${execError}`, 'error')
     }
-  }, [execState])
+  }, [execState, exitCode, execError])
 
   function resetEditorState(exampleCode: string) {
     setCode(exampleCode)
