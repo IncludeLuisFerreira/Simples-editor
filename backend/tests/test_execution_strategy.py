@@ -12,7 +12,9 @@ def _docker_available():
     try:
         import docker
 
-        docker.from_env().ping()
+        client = docker.from_env()
+        client.ping()
+        client.images.get('simples-runner:latest')
         return True
     except Exception:
         return False
