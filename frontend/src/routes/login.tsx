@@ -123,48 +123,32 @@ function Login() {
       ))}
 
       {codeFragments.slice(0, 8).map((f, i) => (
-        <div
+        <span
           key={f.id}
-          className="absolute pointer-events-none select-none"
+          className={`absolute font-mono text-[#c0caf5]/30 pointer-events-none select-none ${f.size}`}
           style={{
-            left: f.left,
-            bottom: '-40px',
-            transform: `translate(${(mouse.x - 0.5) * (15 + i * 3)}px, ${(mouse.y - 0.5) * (12 + i * 2)}px)`,
-            transition: 'transform 0.8s ease-out',
+            left: `calc(${f.left} + ${(mouse.x - 0.5) * (20 + i * 4)}px)`,
+            bottom: `calc(-40px + ${(mouse.y - 0.5) * (15 + i * 3)}px)`,
+            animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
+            opacity: 0,
           }}
         >
-          <span
-            className={`font-mono text-[#c0caf5]/30 ${f.size}`}
-            style={{
-              animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
-              opacity: 0,
-            }}
-          >
-            {f.text}
-          </span>
-        </div>
+          {f.text}
+        </span>
       ))}
       {codeFragments.slice(8).map((f, i) => (
-        <div
+        <span
           key={f.id}
-          className="absolute pointer-events-none select-none hidden sm:block"
+          className={`absolute font-mono text-[#c0caf5]/30 pointer-events-none select-none hidden sm:block ${f.size}`}
           style={{
-            left: f.left,
-            bottom: '-40px',
-            transform: `translate(${(mouse.x - 0.5) * (15 + i * 3)}px, ${(mouse.y - 0.5) * (12 + i * 2)}px)`,
-            transition: 'transform 0.8s ease-out',
+            left: `calc(${f.left} + ${(mouse.x - 0.5) * (20 + i * 4)}px)`,
+            bottom: `calc(-40px + ${(mouse.y - 0.5) * (15 + i * 3)}px)`,
+            animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
+            opacity: 0,
           }}
         >
-          <span
-            className={`font-mono text-[#c0caf5]/30 ${f.size}`}
-            style={{
-              animation: `driftUp ${f.duration} ${f.delay} infinite ease-out`,
-              opacity: 0,
-            }}
-          >
-            {f.text}
-          </span>
-        </div>
+          {f.text}
+        </span>
       ))}
 
       <div className="relative z-10 w-full max-w-md mx-4 animate-[slideUpFade_0.6s_ease-out]">
