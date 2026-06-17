@@ -23,5 +23,5 @@
 }
 
 .xterm .xterm-viewport {
-  padding-left: 6px;
+  padding-left: 12px !important;
 }
