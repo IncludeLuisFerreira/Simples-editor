@@ -29,6 +29,7 @@ class PtyExecutionStrategy:
     RUNNER_IMAGE = os.getenv('RUNNER_IMAGE', 'simples-runner:latest')
     MEM_LIMIT_MB = int(os.getenv('MEM_SANDBOX_LIMIT_MB', '128'))
     PIDS_LIMIT = int(os.getenv('PIDS_SANDBOX_LIMIT', '64'))
+
     def __init__(self):
         self.container = None
         self.tmpdir = None
