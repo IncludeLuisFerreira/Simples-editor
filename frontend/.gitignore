@@ -6,3 +6,7 @@ dist
 .env.local
 *.log
 # src/routeTree.gen.ts — gerado pelo TanStack Router, committed for tsc
+
+# Playwright
+playwright-report/
+test-results/

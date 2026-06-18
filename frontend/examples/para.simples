@@ -1,0 +1,7 @@
+programa para_loop
+  inteiro i
+inicio
+  para i de 1 ate 5 passo 1 faca
+    escreva i
+  fimpara
+fim
