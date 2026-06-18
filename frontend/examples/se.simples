@@ -1,0 +1,10 @@
+programa se_condicao
+  inteiro x;
+inicio
+  leia x;
+  se x > 0 entao
+    escreva 1;
+  senao
+    escreva 0;
+  fimse
+fim

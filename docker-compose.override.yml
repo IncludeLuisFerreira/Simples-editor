@@ -1,0 +1,9 @@
+# Overrides para desenvolvimento local (aplicado automaticamente pelo Docker Compose)
+# Substitui o nginx de produção (HTTPS + certificados) por HTTP simples na porta 80
+
+services:
+  nginx_app:
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro

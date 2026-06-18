@@ -1,0 +1,8 @@
+programa atribuicao
+  inteiro a, b, c;
+inicio
+  a <- 10;
+  b <- 20;
+  c <- a + b * 2;
+  escreva c;
+fim

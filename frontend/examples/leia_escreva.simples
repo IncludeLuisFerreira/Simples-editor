@@ -1,0 +1,6 @@
+programa leia_escreva
+  inteiro x;
+inicio
+  leia x;
+  escreva x;
+fim

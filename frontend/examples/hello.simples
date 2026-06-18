@@ -1,0 +1,4 @@
+programa ola_mundo
+inicio
+  escreva "Ola Mundo";
+fim

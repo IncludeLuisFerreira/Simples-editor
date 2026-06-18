@@ -1,0 +1,48 @@
+groups:
+  - name: simples_alerts
+    interval: 30s
+    rules:
+      - alert: HighActiveSandboxes
+        expr: simples_active_sandboxes > 50
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High number of active sandboxes ({{ $value }})"
+          description: "Active sandboxes exceeded 50 - possible abuse or resource leak."
+
+      - alert: HighCompileErrorRate
+        expr: rate(simples_compile_errors_total[5m]) / rate(simples_executions_total[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High compile error rate ({{ $value | humanizePercentage }})"
+          description: "More than 50% of compilations are failing - possible compiler issue."
+
+      - alert: HighExecutionTimeoutRate
+        expr: rate(simples_executions_total{outcome="timeout"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High execution timeout rate"
+          description: "More than 5 timeouts per minute - possible performance issue."
+
+      - alert: BackendDown
+        expr: up{job="simples-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend is down"
+          description: "Backend metric endpoint unreachable for more than 1 minute."
+
+      - alert: ZeroCompilations
+        expr: rate(simples_executions_total[30m]) == 0
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "No compilations in 30 minutes"
+          description: "No compilation activity detected - possible user-facing issue."

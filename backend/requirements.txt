@@ -1,5 +1,6 @@
 flask==3.0.*
 flask-sock==0.7.*
+flask-limiter==3.*
 gevent==24.*
 docker==7.*
 PyJWT==2.*

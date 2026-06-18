@@ -17,11 +17,18 @@ class Config:
 
     # Timeouts
     EXEC_TIMEOUT_S = int(os.getenv('EXEC_TIMEOUT_S', '10'))
+    EXEC_TIMEOUT_S_ARM64 = int(os.getenv('EXEC_TIMEOUT_S_ARM64', '15'))
     COMPILE_TIMEOUT_S = int(os.getenv('COMPILE_TIMEOUT_S', '15'))
+    ASSEMBLE_TIMEOUT_S = int(os.getenv('ASSEMBLE_TIMEOUT_S', '10'))
+    LINK_TIMEOUT_S = int(os.getenv('LINK_TIMEOUT_S', '10'))
 
     # Limits
     MAX_CODE_KB = int(os.getenv('MAX_CODE_KB', '64'))
     RUNS_PER_MINUTE = int(os.getenv('RUNS_PER_MINUTE', '30'))
+
+    # Sandbox limits
+    MEM_SANDBOX_LIMIT_MB = int(os.getenv('MEM_SANDBOX_LIMIT_MB', '128'))
+    PIDS_SANDBOX_LIMIT = int(os.getenv('PIDS_SANDBOX_LIMIT', '64'))
 
     # Runner
     RUNNER_IMAGE = os.getenv('RUNNER_IMAGE', 'simples-runner:latest')
