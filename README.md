@@ -157,16 +157,19 @@ make lint-frontend            # Lint no frontend (ESLint)
 
 ## Exemplos
 
-> *Imagens serão adicionadas em breve.*
+<p align="center">
+  <img src="https://i.imgur.com/KfD1xH5.png" alt="Editor principal" width="700">
+  <br>
+  <em>Editor principal com editor Monaco, painel de saída NASM e terminal integrado</em>
+</p>
 
-| Tela | Descrição |
-|------|-----------|
-| Editor | Interface principal com editor Monaco, painel de saída NASM e terminal |
-| Login | Tela de autenticação via Supabase Auth UI |
-| Terminal | Execução de programa SIMPLES com saída em tempo real |
+<p align="center">
+  <img src="https://i.imgur.com/3iLbyrP.png" alt="Tela de login" width="700">
+  <br>
+  <em>Tela da IDE do simples editor</em>
+</p>
 
 ---
-
 ## Licença
 
 Distribuído sob licença MIT. Veja [LICENSE](LICENSE) para mais informações.
