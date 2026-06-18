@@ -4,8 +4,10 @@ import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'reac
 import { SimplesEditor, type CompileMarker } from '../components/SimplesEditor'
 import { NasmPanel } from '../components/NasmPanel'
 import { Terminal, type TerminalHandle } from '../components/Terminal'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { useAuth } from '../lib/auth'
 import { useExecution } from '../hooks/useExecution'
+import { CANONICAL_EXAMPLES } from '../lib/examples'
 
 export const Route = createFileRoute('/')({ component: Index })
 
@@ -32,12 +34,51 @@ function Index() {
     stop,
   } = useExecution()
   const terminalRef = useRef<TerminalHandle>(null)
+  const [selectedExample, setSelectedExample] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (execState === 'running') {
       terminalRef.current?.focus()
     }
   }, [execState])
+
+  function resetEditorState(exampleCode: string) {
+    setCode(exampleCode)
+    setNasmState('idle')
+    setNasmAsm('')
+    setNasmErrorLog('')
+    setMarkers([])
+    setInfraError(null)
+  }
+
+  function handleExampleSelect(key: string) {
+    if (!key) return
+    const example = CANONICAL_EXAMPLES.find((e) => e.key === key)
+    if (!example) return
+
+    if (code.trim().length > 0) {
+      setSelectedExample(key)
+      setConfirmOpen(true)
+    } else {
+      resetEditorState(example.code)
+      setSelectedExample('')
+    }
+  }
+
+  function handleConfirmLoad() {
+    const example = CANONICAL_EXAMPLES.find((e) => e.key === selectedExample)
+    if (example) {
+      resetEditorState(example.code)
+    }
+    setConfirmOpen(false)
+    setSelectedExample('')
+  }
+
+  function handleCancelLoad() {
+    setConfirmOpen(false)
+    setSelectedExample('')
+  }
 
   async function handleRun() {
     if (!session || isCompiling) return
@@ -120,6 +161,21 @@ function Index() {
                   ? 'Parando...'
                   : '▶ Run'}
         </button>
+        <select
+          value={selectedExample}
+          onChange={(e) => handleExampleSelect(e.target.value)}
+          className="px-3 py-1.5 bg-[#0f3460] border border-[#1a5276] rounded text-sm text-gray-200 hover:border-cyan-500 focus:outline-none focus:border-cyan-400 transition-colors cursor-pointer"
+          aria-label="Carregar exemplo"
+        >
+          <option value="" disabled>
+            📂 Exemplos...
+          </option>
+          {CANONICAL_EXAMPLES.map((ex) => (
+            <option key={ex.key} value={ex.key}>
+              {ex.label}
+            </option>
+          ))}
+        </select>
         {execState === 'running' && (
           <>
             <button
@@ -170,6 +226,13 @@ function Index() {
       <div className="h-48 border-t border-[#0f3460]">
         <Terminal ref={terminalRef} onInput={sendInput} onOutput={registerOutput} />
       </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Substituir código?"
+        message="O editor já contém código. Carregar um exemplo substituirá o conteúdo atual."
+        onConfirm={handleConfirmLoad}
+        onCancel={handleCancelLoad}
+      />
     </div>
   )
 }

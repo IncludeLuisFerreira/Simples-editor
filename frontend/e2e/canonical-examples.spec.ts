@@ -338,3 +338,117 @@ test.describe('Editor UI Behavior', () => {
     expect(nasmText.length).toBeGreaterThan(10)
   })
 })
+
+test.describe('Examples Dropdown', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupAuth(page)
+    await mockCompileRoute(page)
+    await page.goto('/')
+    await page.waitForSelector('.monaco-editor', { state: 'visible', timeout: 15000 })
+  })
+
+  test('loads example code into editor', async ({ page }) => {
+    const dropdown = page.locator('select[aria-label="Carregar exemplo"]')
+    await dropdown.selectOption('fatorial')
+
+    await page.waitForTimeout(500)
+
+    const editorValue = await page.evaluate(() => {
+      const m = (window as unknown as Record<string, unknown>).monaco as
+        | { editor?: { getEditors?: () => Array<{ getValue?: () => string }> } }
+        | undefined
+      const editors = m?.editor?.getEditors?.()
+      return editors?.[0]?.getValue?.() ?? ''
+    })
+    expect(editorValue).toContain('programa fatorial')
+    expect(editorValue).toContain('fat <- 1')
+  })
+
+  test('shows confirm dialog when editor has code', async ({ page }) => {
+    const code = 'programa existente\ninicio\nfim'
+    await typeCodeInEditor(page, code)
+
+    const dropdown = page.locator('select[aria-label="Carregar exemplo"]')
+    await dropdown.selectOption('hello')
+
+    const dialog = page.getByRole('alertdialog')
+    await expect(dialog).toBeVisible({ timeout: 3000 })
+    await expect(page.getByText('Substituir código?')).toBeVisible()
+    await expect(page.getByText('O editor já contém código')).toBeVisible()
+  })
+
+  test('confirm dialog replaces code', async ({ page }) => {
+    const code = 'programa existente\ninicio\nfim'
+    await typeCodeInEditor(page, code)
+
+    const dropdown = page.locator('select[aria-label="Carregar exemplo"]')
+    await dropdown.selectOption('fatorial')
+
+    const dialog = page.getByRole('alertdialog')
+    await expect(dialog).toBeVisible({ timeout: 3000 })
+
+    await page.getByRole('button', { name: 'Substituir' }).click()
+
+    await page.waitForTimeout(500)
+
+    const editorValue = await page.evaluate(() => {
+      const m = (window as unknown as Record<string, unknown>).monaco as
+        | { editor?: { getEditors?: () => Array<{ getValue?: () => string }> } }
+        | undefined
+      const editors = m?.editor?.getEditors?.()
+      return editors?.[0]?.getValue?.() ?? ''
+    })
+    expect(editorValue).toContain('programa fatorial')
+    expect(editorValue).not.toContain('programa existente')
+  })
+
+  test('cancel dialog keeps original code', async ({ page }) => {
+    const code = 'programa existente\ninicio\nfim'
+    await typeCodeInEditor(page, code)
+
+    const dropdown = page.locator('select[aria-label="Carregar exemplo"]')
+    await dropdown.selectOption('hello')
+
+    const dialog = page.getByRole('alertdialog')
+    await expect(dialog).toBeVisible({ timeout: 3000 })
+
+    await page.getByRole('button', { name: 'Cancelar' }).click()
+
+    await page.waitForTimeout(500)
+
+    const editorValue = await page.evaluate(() => {
+      const m = (window as unknown as Record<string, unknown>).monaco as
+        | { editor?: { getEditors?: () => Array<{ getValue?: () => string }> } }
+        | undefined
+      const editors = m?.editor?.getEditors?.()
+      return editors?.[0]?.getValue?.() ?? ''
+    })
+    expect(editorValue).toContain('programa existente')
+  })
+
+  test('resets NASM panel to idle after loading example', async ({ page }) => {
+    const code = readExample('hello')
+    await typeCodeInEditor(page, code)
+
+    await page.getByRole('button', { name: /run/i }).click()
+    await page.waitForTimeout(800)
+
+    // NASM should show assembly now
+    const nasmTextBefore = await getNasmPanelContent(page)
+    expect(nasmTextBefore.length).toBeGreaterThan(10)
+
+    // Load another example via dropdown
+    const dropdown = page.locator('select[aria-label="Carregar exemplo"]')
+    await dropdown.selectOption('fatorial')
+
+    // Confirm the replacement
+    const dialog = page.getByRole('alertdialog')
+    await expect(dialog).toBeVisible({ timeout: 3000 })
+    await page.getByRole('button', { name: 'Substituir' }).click()
+    await page.waitForTimeout(500)
+
+    // NASM should be back to idle message
+    const idleMessage = page.getByText(/compile seu código para ver o assembly gerado/i)
+    await expect(idleMessage).toBeVisible({ timeout: 5000 })
+  })
+})
