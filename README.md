@@ -1,91 +1,172 @@
-# Simples-editor
+<div align="center">
 
-[![CI](https://github.com/IncludeLuisFerreira/Simples-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/IncludeLuisFerreira/Simples-editor/actions/workflows/ci.yml)
+# 🧩 Simples-editor
 
-Online IDE for the SIMPLES programming language. Write, compile, and execute SIMPLES programs directly from the browser.
+**IDE online para a linguagem de programação SIMPLES**
 
-## Stack
+[![CI](https://img.shields.io/github/actions/workflow/status/IncludeLuisFerreira/Simples-editor/ci.yml?branch=main&logo=githubactions&logoColor=white&label=CI)](https://github.com/IncludeLuisFerreira/Simples-editor/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.0-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://docker.com)
+[![Licença](https://img.shields.io/badge/Licença-MIT-yellow)](LICENSE)
 
-- **Frontend**: React 18, TypeScript, TanStack Router, Tailwind CSS, Vite
-- **Backend**: Flask 3.0 (Python 3.11), WebSockets, Supabase Auth
-- **Infrastructure**: Docker Compose, Nginx reverse proxy, GitHub Actions CI
+</div>
 
-## Architecture
+---
 
-```
-Client ──► Nginx (80/443)
-              ├── / ──► Frontend (React static)
-              ├── /api/ ──► Backend (Flask REST)
-              └── /ws/ ──► Backend (WebSocket)
+## Visão Geral
 
-Backend ──► Docker SDK ──► Runner Container (sandbox)
-                                    │
-                                    ▼
-                            qemu-i386 (ARM64) / native (x86_64)
-```
+**Simples-editor** é um ambiente integrado de desenvolvimento *online* para a linguagem **SIMPLES** — uma linguagem de programação educacional com palavras-chave em português, criada para o ensino de lógica de programação.
 
-The backend spawns ephemeral Docker containers (`simples-runner`) for isolated code execution. Each container compiles SIMPLES source with `simplesc`, assembles with NASM, links with `i686-linux-gnu-ld`, and executes under `qemu-i386-static` on ARM64 hosts.
+O fluxo do editor até a execução é totalmente remoto: o código escrito no navegador é enviado para uma API Flask, compilado para assembly x86 (via `simplesc`), montado com **NASM**, linkeditado com `i686-linux-gnu-ld` e executado em contêineres Docker efêmeros com isolamento completo. A saída é transmitida em tempo real via **WebSocket** para um terminal **xterm.js** no navegador.
 
-## Prerequisites
+### Funcionalidades
+
+- ✏️ Editor Monaco com syntax highlighting para SIMPLES e assembly x86
+- 🚀 Compilação e execução remota com sandbox isolado via Docker
+- ⚡ Transmissão de saída em tempo real via WebSocket
+- 🔐 Autenticação via Supabase Auth
+- 📊 Monitoramento com Prometheus + Grafana
+- 🐳 Infraestrutura 100% conteinerizada com Docker Compose
+- ☁️ Deploy em Oracle Cloud (ARM64 Ampere A1) via Terraform
+
+---
+
+## QuickStart
+
+### Pré-requisitos
 
 - Docker 24+
 - Docker Compose v2
-- gh CLI (for development workflow)
 
-## Local Setup
+### Setup local
 
 ```bash
-# 1. Clone the repository
+# Clone o repositório
 git clone https://github.com/IncludeLuisFerreira/Simples-editor.git
 cd Simples-editor
 
-# 2. Configure environment variables
+# Configure as variáveis de ambiente
 cp .env.example .env
-# Edit .env with your Supabase credentials
+# Edite .env com suas credenciais do Supabase
 
-# 3. Start all services
+# Inicie todos os serviços
 docker compose up --build -d
 
-# 4. Verify everything is running
+# Verifique o status
 docker compose ps
 curl http://localhost/api/health
 ```
 
-The application will be available at `http://localhost`.
+A aplicação estará disponível em `http://localhost`.
 
-### Useful commands
-
-```bash
-# View logs
-docker compose logs -f
-
-# Stop services
-docker compose down
-
-# Stop and remove volumes
-docker compose down -v
-```
-
-## Linting
+### Comandos úteis
 
 ```bash
-make lint            # Run all linters
-make lint-backend    # Backend only (ruff)
-make lint-frontend   # Frontend only (ESLint)
+docker compose logs -f        # Acompanhar logs
+docker compose down           # Parar serviços
+docker compose down -v        # Parar e remover volumes
+make lint                     # Executar todos os linters
+make lint-backend             # Lint no backend (ruff)
+make lint-frontend            # Lint no frontend (ESLint)
 ```
 
-## Project Structure
+---
+
+## Arquitetura
 
 ```
-├── backend/          # Flask API (REST + WebSocket)
-├── frontend/         # React SPA
-├── nginx/            # Reverse proxy config + SSL
-├── runner/           # Sandbox execution container
-├── scripts/          # Utility scripts
-├── docs/             # Documentation
-└── docker-compose.yml
+┌──────────┐      ┌──────────┐      ┌──────────────┐
+│  Client  │ ──►  │  Nginx   │ ──►  │  Frontend    │
+│ (Browser)│ ◄──  │ (Proxy)  │      │ (React SPA)  │
+└──────────┘      └────┬─────┘      └──────────────┘
+                       │
+               ┌───────┴────────┐
+               │                │
+        ┌──────▼──────┐  ┌─────▼──────┐
+        │  /api/*     │  │  /ws/*     │
+        │ (REST)      │  │(WebSocket) │
+        └──────┬──────┘  └─────┬──────┘
+               │                │
+        ┌──────▼────────────────▼──────┐
+        │         Backend (Flask)       │
+        │  • CompilerService            │
+        │  • PtyExecutionStrategy       │
+        │  • Auth (Supabase JWT)        │
+        │  • Rate Limiting              │
+        │  • Prometheus Metrics         │
+        └──────────────┬───────────────┘
+                       │
+              ┌────────▼────────┐
+              │  Docker SDK     │
+              └────────┬────────┘
+                       │
+              ┌────────▼────────┐
+              │  Runner Cont.   │
+              │  (sandbox)      │
+              │                 │
+              │  ┌───────────┐  │
+              │  │  simplesc │  │
+              │  │  ─► nasm  │  │
+              │  │  ─► ld    │  │
+              │  │  ─► exec  │  │
+              │  └───────────┘  │
+              └─────────────────┘
 ```
 
-## License
+### Componentes
 
-MIT — see [LICENSE](LICENSE).
+| Camada | Tecnologia | Função |
+|--------|-----------|--------|
+| **Frontend** | React 18 + TypeScript + Vite | Interface do editor com Monaco, terminal xterm.js e painéis redimensionáveis |
+| **Proxy** | Nginx | Roteamento para API REST, WebSocket e assets estáticos |
+| **Backend** | Flask 3.0 + gevent + WebSocket | Compilação, sandbox, autenticação e métricas |
+| **Runner** | Docker (Debian slim + qemu-user-static) | Contêiner efêmero para compilação e execução isolada |
+| **Auth** | Supabase | Autenticação por e-mail/senha e JWT |
+| **Monitoria** | Prometheus + Grafana | Métricas de uso e alertas |
+| **Infra** | Terraform + Oracle Cloud (Ampere A1 ARM64) | Provisionamento e deploy |
+
+### Estrutura do projeto
+
+```
+├── backend/            # API Flask (REST + WebSocket)
+│   ├── app/
+│   │   ├── middleware/ # Auth, logging, rate limiting
+│   │   ├── routes/     # Health, auth, compile, execution, metrics
+│   │   ├── services/   # CompilerService, validation, metrics
+│   │   └── strategies/ # PtyExecutionStrategy (sandbox)
+│   └── tests/          # Testes com pytest
+├── frontend/           # SPA React + TypeScript
+│   ├── src/
+│   │   ├── components/ # Editor, Terminal, AuthGuard, etc.
+│   │   ├── hooks/      # useExecution, useSplitter
+│   │   ├── lib/        # Supabase client, Monaco lang definitions
+│   │   └── routes/     # TanStack Router pages
+│   └── examples/       # Programas exemplos em SIMPLES
+├── runner/             # Imagem do sandbox de execução
+├── nginx/              # Configuração do proxy reverso
+├── monitoring/         # Prometheus + Grafana (provisionado)
+├── terraform/          # IaC para Oracle Cloud (Ampere A1)
+├── scripts/            # Deploy, SSL, validação
+└── docs/               # Documentação
+```
+
+---
+
+## Exemplos
+
+> *Imagens serão adicionadas em breve.*
+
+| Tela | Descrição |
+|------|-----------|
+| Editor | Interface principal com editor Monaco, painel de saída NASM e terminal |
+| Login | Tela de autenticação via Supabase Auth UI |
+| Terminal | Execução de programa SIMPLES com saída em tempo real |
+
+---
+
+## Licença
+
+Distribuído sob licença MIT. Veja [LICENSE](LICENSE) para mais informações.
