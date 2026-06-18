@@ -10,21 +10,32 @@ interface TerminalProps {
 export interface TerminalHandle {
   focus: () => void
   clear: () => void
+  writeMessage: (text: string, style?: 'success' | 'error' | 'timeout') => void
 }
+
+const MARGIN = '      '
 
 function writeBanner(term: XtermTerminal) {
   const c = '\x1b[1;36m'
   const r = '\x1b[0m'
+  const w = 44
+  const border = '\u2500'.repeat(w)
+  const indent = '   '
+
+  const text1 = 'SIMPLES TERMINAL'
+  const text2 = 'Digite seu input e pressione Enter'
+  const pad1 = w - (indent + text1).length
+  const pad2 = w - (indent + text2).length
+
   term.writeln('')
+  term.writeln(`${MARGIN}${c}\u250c${border}\u2510${r}`)
   term.writeln(
-    `  ${c}\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510${r}`,
+    `${MARGIN}${c}\u2502${r}${indent}\x1b[1;37m${text1}\x1b[0m${' '.repeat(pad1)}${c}\u2502${r}`,
   )
-  term.writeln(`  ${c}\u2502${r}   \x1b[1;37mSIMPLES TERMINAL\x1b[0m              ${c}\u2502${r}`)
-  term.writeln(`  ${c}\u2502${r}   Digite seu input e pressione Enter  ${c}\u2502${r}`)
-  term.writeln(
-    `  ${c}\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518${r}`,
-  )
+  term.writeln(`${MARGIN}${c}\u2502${r}${indent}${text2}${' '.repeat(pad2)}${c}\u2502${r}`)
+  term.writeln(`${MARGIN}${c}\u2514${border}\u2518${r}`)
   term.writeln('')
+  term.write(MARGIN)
 }
 
 export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
@@ -44,13 +55,27 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
       bufferRef.current = ''
       writeBanner(term)
     },
+    writeMessage: (text: string, style: 'success' | 'error' | 'timeout' = 'success') => {
+      const term = xtermRef.current
+      if (!term) return
+      const colors: Record<string, string> = {
+        success: '\x1b[1;32m',
+        error: '\x1b[1;31m',
+        timeout: '\x1b[1;33m',
+      }
+      const c = colors[style] || colors.success
+      term.writeln('')
+      term.writeln(`${MARGIN}${c}${text}\x1b[0m`)
+      term.writeln('')
+      term.write(MARGIN)
+    },
   }))
 
   useEffect(() => {
     if (!terminalRef.current) return
 
     const term = new XtermTerminal({
-      theme: { background: '#0a0a1a', foreground: '#e0e0e0', cursor: '#00bcd4' },
+      theme: { background: '#1a1b26', foreground: '#c0caf5', cursor: '#7aa2f7' },
       fontSize: 13,
       fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace",
       cursorBlink: true,
@@ -80,6 +105,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
         term.write('\r\n')
         onInput(bufferRef.current + '\n')
         bufferRef.current = ''
+        term.write(MARGIN)
         return
       }
       if (data === '\x7f' || data === '\b') {

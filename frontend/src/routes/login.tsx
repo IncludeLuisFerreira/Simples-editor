@@ -20,7 +20,7 @@ function Login() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="w-full max-w-md">
-        <h2 className="text-2xl font-semibold text-center mb-6 text-gray-200">
+        <h2 className="text-2xl font-semibold text-center mb-6 text-[#c0caf5]">
           Entrar no Simples Editor
         </h2>
         <Auth

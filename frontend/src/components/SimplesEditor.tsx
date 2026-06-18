@@ -69,20 +69,21 @@ export function SimplesEditor({ value, onChange, readOnly = false, markers }: Si
       base: 'vs-dark',
       inherit: true,
       rules: [
-        { token: 'keyword', foreground: '00bcd4', fontStyle: 'bold' },
-        { token: 'number', foreground: 'ff9800' },
-        { token: 'number.float', foreground: 'ff9800' },
-        { token: 'identifier', foreground: 'e0e0e0' },
-        { token: 'operator', foreground: 'ce93d8' },
-        { token: 'delimiter', foreground: '90a4ae' },
-        { token: 'comment', foreground: '66bb6a' },
+        { token: 'keyword', foreground: 'bb9af7', fontStyle: 'bold' },
+        { token: 'number', foreground: 'ff9e64' },
+        { token: 'number.float', foreground: 'ff9e64' },
+        { token: 'string', foreground: '9ece6a' },
+        { token: 'identifier', foreground: 'c0caf5' },
+        { token: 'operator', foreground: '89ddff' },
+        { token: 'delimiter', foreground: 'a9b1d6' },
+        { token: 'comment', foreground: '565f89' },
       ],
       colors: {
-        'editor.background': '#1a1a2e',
-        'editor.foreground': '#e0e0e0',
-        'editor.lineHighlightBackground': '#16213e',
-        'editorCursor.foreground': '#00bcd4',
-        'editor.selectionBackground': '#0f3460',
+        'editor.background': '#1a1b26',
+        'editor.foreground': '#c0caf5',
+        'editor.lineHighlightBackground': '#24283b',
+        'editorCursor.foreground': '#7aa2f7',
+        'editor.selectionBackground': '#3b4261',
       },
     })
   }
@@ -106,6 +107,7 @@ export function SimplesEditor({ value, onChange, readOnly = false, markers }: Si
         autoClosingBrackets: 'always',
         matchBrackets: 'always',
         tabSize: 2,
+        placeholder: 'Digite seu código Simples aqui...',
       }}
     />
   )
