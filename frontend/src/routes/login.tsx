@@ -39,6 +39,23 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [confirmationSuccess] = useState(() => {
+    const hash = window.location.hash
+    if (hash && hash.includes('type=signup')) {
+      window.history.replaceState(null, '', window.location.pathname)
+      return true
+    }
+    return false
+  })
+  const [passwordResetSuccess] = useState(() => {
+    const flag = sessionStorage.getItem('password_reset_success')
+    if (flag) {
+      sessionStorage.removeItem('password_reset_success')
+      return true
+    }
+    return false
+  })
+  const autoSignedOut = useRef(false)
   const [mouse, setMouse] = useState({ x: -1000, y: -1000 })
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerSize, setContainerSize] = useState({
@@ -81,21 +98,37 @@ function Login() {
   }
 
   useEffect(() => {
-    if (user) navigate({ to: '/' })
-  }, [user, navigate])
+    if (!user) return
+    if (confirmationSuccess) {
+      if (!autoSignedOut.current) {
+        autoSignedOut.current = true
+        supabase.auth.signOut()
+      }
+      return
+    }
+    navigate({ to: '/' })
+  }, [user, navigate, confirmationSuccess])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
     if (authError) {
       setError(authError.message)
       setLoading(false)
+      return
     }
+    if (data.user && !data.user.email_confirmed_at) {
+      await supabase.auth.signOut()
+      setError('Confirme seu email antes de fazer login. Verifique sua caixa de entrada.')
+      setLoading(false)
+      return
+    }
+    navigate({ to: '/' })
   }
 
   return (
@@ -255,6 +288,30 @@ function Login() {
             </p>
           </div>
           <hr className="border-[#292e42] mb-6" />
+          {(confirmationSuccess || passwordResetSuccess) && (
+            <div className="flex items-start gap-2 text-[#9ece6a] text-sm bg-[#9ece6a]/10 border border-[#9ece6a]/20 rounded-lg px-3 py-2 mb-6">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mt-0.5 shrink-0"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <span>
+                {confirmationSuccess
+                  ? 'Conta criada! Faça login para continuar.'
+                  : 'Senha alterada! Faça login para continuar.'}
+              </span>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs uppercase tracking-wide text-[#a9b1d6] mb-1">
@@ -288,7 +345,7 @@ function Login() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#565f89] hover:text-[#a9b1d6] transition-colors"
                   tabIndex={-1}
                 >
-                  {showPassword ? (
+                  {!showPassword ? (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="18"
@@ -323,6 +380,15 @@ function Login() {
                 </button>
               </div>
             </div>
+            <div className="flex justify-end text-sm">
+              <button
+                type="button"
+                onClick={() => navigate({ to: '/forgot-password' })}
+                className="text-[#7aa2f7] hover:text-[#89b4fa] transition-colors"
+              >
+                Esqueceu a senha?
+              </button>
+            </div>
             {error && (
               <div className="flex items-center gap-2 text-[#f7768e] text-sm bg-[#f7768e]/10 border border-[#f7768e]/20 rounded-lg px-3 py-2">
                 <span>⚠</span>
@@ -342,6 +408,13 @@ function Login() {
               ) : (
                 'Entrar'
               )}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate({ to: '/signup' })}
+              className="w-full bg-[#bb9af7] hover:bg-[#c4a8ff] text-[#1a1b26] font-semibold py-3 rounded-lg transition-all hover:shadow-lg hover:shadow-[#bb9af7]/20"
+            >
+              Cadastre-se
             </button>
           </form>
         </div>
