@@ -12,7 +12,7 @@ function Root() {
   const location = useLocation()
 
   useEffect(() => {
-    if (!loading && !user && location.pathname !== '/login') {
+    if (!loading && !user && location.pathname !== '/login' && location.pathname !== '/signup' && location.pathname !== '/forgot-password') {
       navigate({ to: '/login' })
     }
   }, [loading, user, location.pathname, navigate])
